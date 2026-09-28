@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vikings Admin</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Permanent+Marker&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}
+/* Layout: stadium-night stat book — season strip, leader boards, tabbed stat tables, game log + CSV drop. Single dark look by choice. */
+:root{
+  --bg:#0c0717; --panel:#160e28; --panel2:#1e1436; --line:#33255a; --fg:#efeaf8; --mute:#a99ec6;
+  --accent:#9b5cff; --accent2:#6f33e0; --gold:#ffc62f; --good:#5fd38a; --bad:#ff6b7a;
+  --display:"Permanent Marker","Comic Sans MS",cursive; --num:"Bebas Neue",Impact,"Arial Narrow",sans-serif;
+  --body:"Rajdhani",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;font-weight:500;line-height:1.4}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 40% at 50% -5%,rgba(155,92,255,.28),transparent 70%)}
+.wrap{position:relative;max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:28px}
+header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.eyebrow{font-size:13px;letter-spacing:.42em;color:var(--gold);font-weight:700;text-transform:uppercase}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(40px,7vw,76px);line-height:1;transform:rotate(-2deg);text-shadow:0 4px 0 var(--accent2),0 8px 18px rgba(0,0,0,.6);text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--mute);font-size:15px;letter-spacing:.06em}
+h2{margin:0;font-family:var(--num);font-weight:400;font-size:30px;letter-spacing:.08em;line-height:1}
+h2 small{font-family:var(--body);font-size:14px;color:var(--mute);letter-spacing:.1em;margin-left:10px;font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:12px 14px}
+.tile b{display:block;font-family:var(--num);font-weight:400;font-size:44px;line-height:1}
+.tile span{font-size:13px;letter-spacing:.16em;color:var(--mute);font-weight:700;text-transform:uppercase}
+.leaders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.lcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.lcard h3{margin:0;font-size:13px;letter-spacing:.2em;color:var(--gold);font-weight:700;text-transform:uppercase}
+.lrow{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px}
+.lrow .jn{width:38px;height:38px;border-radius:50%;background:linear-gradient(180deg,var(--accent),var(--accent2));border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--num);font-size:20px;padding-top:2px}
+.lrow:not(:first-of-type) .jn{background:var(--panel2);border-color:var(--line);font-size:18px}
+.lrow .nm{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .v{font-family:var(--num);font-size:28px;line-height:1}
+.lrow:first-of-type .v{color:var(--gold)}
+.muted{color:var(--mute)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:inherit;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--mute);background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:#140a26;background:var(--gold);border-color:var(--gold)}
+.tabs button:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:640px}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase;cursor:pointer;user-select:none}
+th.sorted{color:var(--gold)} th.sorted::after{content:" ▾"}
+th:first-child,td:first-child{text-align:left}
+td:first-child{font-weight:700}
+td .jn{display:inline-block;min-width:30px;font-family:var(--num);color:var(--gold);font-size:18px}
+tbody tr:hover{background:rgba(155,92,255,.08)}
+.empty{padding:22px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:12px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.games{display:flex;flex-direction:column;gap:10px}
+.game{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.ghead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gtitle{font-family:var(--num);font-size:24px;letter-spacing:.04em;line-height:1}
+.gmeta{font-size:14px;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--fg);background:rgba(255,255,255,.03)}
+.btn{font:inherit;font-weight:700;letter-spacing:.08em;font-size:14px;border-radius:10px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#140a26}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase;flex:1 1 150px;min-width:0}
+input[type=text],input[type=date],input[type=number]{font:inherit;font-size:16px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;padding:6px 8px;border:1px solid var(--line);border-radius:8px;cursor:pointer;min-width:0}
+.checks label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.checks label.on{border-color:var(--accent);background:rgba(155,92,255,.12)}
+.checks input{accent-color:var(--accent)}
+.drop{border:2px dashed var(--accent);border-radius:14px;padding:22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;background:rgba(155,92,255,.06);cursor:pointer}
+.drop.over{background:rgba(155,92,255,.18)}
+.drop b{font-family:var(--num);font-size:26px;letter-spacing:.06em;font-weight:400}
+.note{font-size:14px;color:var(--mute)}
+.msg{font-size:14px;font-weight:700}
+.msg.ok{color:var(--good)} .msg.err{color:var(--bad)}
+.roster td input{max-width:160px}
+.roster td input[type=number]{max-width:80px}
+footer{text-align:center;color:var(--mute);font-size:13px;letter-spacing:.1em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.rtab{width:100%;min-width:0;table-layout:fixed}
+.rtab th:nth-child(3),.rtab td.n{width:62px}
+.rtab th:nth-child(4){width:52px}
+.rtab td.n input{padding:8px 6px;text-align:center}
+.rtab td.x{width:44px}
+.rtab td,.rtab th{text-align:left;padding:6px 6px}
+.rtab th{cursor:default}
+.rtab td input{max-width:none}
+.gate{max-width:560px;margin:0 auto}
+ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;color:var(--mute)}
+ol.steps b{color:var(--fg)}
+a{color:var(--gold)}
+.tag{font-size:11px;letter-spacing:.12em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.tag.new{border-color:var(--gold);color:var(--gold)}
+.hide{display:none!important}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Vikings Stat Book</div>
+    <h1>ADMIN <span>PANEL</span></h1>
+    <div class="sub"><a href="./">← Back to the stat book</a></div>
+  </header>
+
+  <!-- sign in -->
+  <section class="panel gate" id="gate">
+    <h2>Sign in</h2>
+    <div class="note">This page saves changes straight to your GitHub repo, so it needs a GitHub access token. You only do this once per device.</div>
+    <ol class="steps">
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → New fine-grained token</a>.</li>
+      <li>Name it anything. Set <b>Expiration</b> to whatever you like.</li>
+      <li><b>Repository access</b> → Only select repositories → <b>vikings-stats</b>.</li>
+      <li><b>Permissions</b> → Repository permissions → <b>Contents: Read and write</b>.</li>
+      <li>Generate, copy the token, paste it below.</li>
+    </ol>
+    <label class="f">Access token<input type="password" id="tok" autocomplete="off" placeholder="github_pat_…"></label>
+    <div class="row"><button class="btn gold" id="signin">Sign in</button><span class="msg" id="gmsg"></span></div>
+    <div class="note">The token is stored only in this browser. Never share it — anyone with it can edit your stats.</div>
+  </section>
+
+  <div id="app" class="hide" style="display:flex;flex-direction:column;gap:28px">
+    <div class="row" style="justify-content:space-between"><span class="note" id="who"></span><button class="btn" id="signout">Sign out</button></div>
+
+    <!-- roster -->
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h2>Roster</h2><button class="btn" id="addp">+ Add player</button></div>
+      <div class="note">Username must match the Roblox username exactly as it appears in the stats CSV (capitals don't matter).</div>
+      <div class="tscroll"><table class="rtab"><thead><tr><th>Username</th><th>Nickname</th><th>#</th><th></th></tr></thead><tbody id="rbody"></tbody></table></div>
+      <div class="row"><button class="btn primary" id="saver">Save roster</button><span class="msg" id="rmsg"></span></div>
+    </section>
+
+    <!-- add game -->
+    <section class="panel">
+      <h2>Add a game</h2>
+      <div class="drop" id="drop" tabindex="0" role="button"><b>DROP THE STATS CSV HERE</b><span class="note">or tap to pick the file</span><input type="file" id="file" accept=".csv,text/csv" hidden></div>
+      <div id="newg" class="hide" style="display:flex;flex-direction:column;gap:12px">
+        <div class="row">
+          <label class="f">Date<input type="date" id="gdate"></label>
+          <label class="f" style="flex:2 1 220px">Title<input type="text" id="gtitle" placeholder="vs Saints"></label>
+        </div>
+        <div class="note">Tick everyone who played <b>for the Vikings</b> this game. Roster players are ticked automatically — untick anyone who was on the other team.</div>
+        <div class="checks" id="gchecks"></div>
+        <div class="row"><button class="btn gold" id="saveg">Add game</button><button class="btn" id="cancelg">Cancel</button><span class="msg" id="nmsg"></span></div>
+      </div>
+    </section>
+
+    <!-- existing games -->
+    <section class="panel">
+      <h2>Games <small id="gcount"></small></h2>
+      <div class="games" id="glist"></div>
+    </section>
+  </div>
+  <footer>Changes show on the public stat book about a minute after saving.</footer>
+</div>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const SECS = ["Passing","Rushing","Receiving","Cornerback","DLine","SpecialTeams"];
+  function parseStats(text){
+    const out = {}; let sec = null, head = null;
+    for (const raw of text.replace(/\r/g,"").split("\n")){
+      const line = raw.trim(); if (!line) continue;
+      const bare = line.replace(/,+$/,"").replace(/^"|"$/g,"");
+      if (SECS.includes(bare)){ sec = bare; head = null; continue; }
+      const cells = line.split(",").map(c => c.replace(/^"|"$/g,"").trim());
+      if (cells[0] === "Username"){ head = cells; continue; }
+      if (!sec || !head || !cells[0]) continue;
+      const row = {}; head.forEach((h,i) => row[h] = cells[i]);
+      const u = cells[0], p = out[u] || (out[u] = {});
+      const N = h => { const v = parseFloat(row[h]); return isFinite(v) ? v : 0; };
+      const add = (k,v) => { if (v) p[k] = (p[k]||0) + v; };
+      if (sec === "Passing"){ add("cmp",N("Completions")); add("att",N("Attempts")); add("pyd",N("Passing Yards")); add("ptd",N("Touchdowns")); add("pint",N("Interceptions")); add("sk",N("Sacks Taken")); }
+      else if (sec === "Rushing"){ add("ra",N("Rushing Attempts")); add("ryd",N("Rushing Yards")); add("rtd",N("Touchdowns")); }
+      else if (sec === "Receiving"){ add("rec",N("Receptionss")+N("Receptions")); add("tgt",N("Targets")); add("cyd",N("Receiving Yards")); add("ctd",N("Touchdowns")); add("yac",N("Yards After Catch")); add("drp",N("Drops")); add("trf",N("Catches In Traffic")); }
+      else if (sec === "Cornerback"){ add("tkl",N("Tackles")); add("tfl",N("Tackles For Loss")); add("int",N("Interceptions")); add("itd",N("Interception TDs")); add("pbu",N("Pass Break Ups")); add("ca",N("Completions Allowed")); add("ctg",N("Targets")); add("ya",N("Passing Yards Allowed")); add("tda",N("Passing Touchdowns Allowed")); }
+      else if (sec === "DLine"){ add("pr",N("Rushes")); add("sck",N("Sacks")); add("qbh",N("Quarterback Hits")); add("prs",N("QB Pressures")); add("ff",N("Fumbles Forced")); add("fr",N("Fumbles Recovered")); }
+      else if (sec === "SpecialTeams"){ const fg = String(row["Field Goals"]||"0/0").split("/"); add("fgm",+fg[0]||0); add("fga",+fg[1]||0); add("kr",N("Kick Returns")); add("kry",N("Kick Return Yards")); add("krtd",N("Kick Return Touchdowns")); add("pnt",N("Punts")); add("in10",N("Punts In 10YD Line")); }
+    }
+    for (const u in out) if (!Object.keys(out[u]).length) delete out[u];
+    return out;
+  }
+  const parseCSV = t => Object.keys(parseStats(t));
+
+  // ---------- GitHub API ----------
+  const h = location.hostname, parts = location.pathname.split("/").filter(Boolean);
+  const OWNER = h.endsWith(".github.io") ? h.split(".")[0] : "EliteTuber168";
+  const REPO = h.endsWith(".github.io") ? (parts[0] || h) : "vikings-stats";
+  const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+  let TOKEN = ""; try{ TOKEN = localStorage.getItem("vk_token") || ""; }catch{}
+  const b64enc = str => { const b = new TextEncoder().encode(str); let s = ""; for (let i=0;i<b.length;i+=0x8000) s += String.fromCharCode(...b.subarray(i,i+0x8000)); return btoa(s); };
+  const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g,"")), c => c.charCodeAt(0)));
+  const path = p => p.split("/").map(encodeURIComponent).join("/");
+  async function gh(p, opts={}){
+    const r = await fetch(API + path(p) + (opts.method ? "" : `?t=${Date.now()}`), {
+      ...opts, cache:"no-store",
+      headers:{Authorization:`Bearer ${TOKEN}`, Accept:"application/vnd.github+json", ...(opts.body?{"Content-Type":"application/json"}:{})}
+    });
+    if (!r.ok){ let m = r.status; try{ m = (await r.json()).message || m; }catch{} const e = new Error(m); e.status = r.status; throw e; }
+    return r.status === 204 ? null : r.json();
+  }
+  const put = (p, content, message, sha) => gh(p, {method:"PUT", body:JSON.stringify({message, content:b64enc(content), ...(sha?{sha}:{})})});
+  const del = (p, sha, message) => gh(p, {method:"DELETE", body:JSON.stringify({message, sha})});
+
+  // ---------- state ----------
+  let cfg = null, cfgSha = null, games = [], rosterRows = [], pending = null;
+  async function loadCfg(){ const f = await gh("config.json"); cfgSha = f.sha; cfg = JSON.parse(b64dec(f.content)); cfg.roster ||= {}; cfg.games ||= {}; }
+  async function saveCfg(message){
+    try{ const r = await put("config.json", JSON.stringify(cfg, null, 2) + "\n", message, cfgSha); cfgSha = r.content.sha; }
+    catch(e){ if (e.status === 409){ throw new Error("Someone else saved at the same time. Reload the page and try again."); } throw e; }
+  }
+  async function loadGames(){
+    let list = [];
+    try{ list = await gh("games"); }catch(e){ if (e.status !== 404) throw e; }
+    games = list.filter(f => /\.csv$/i.test(f.name)).sort((a,b)=>b.name.localeCompare(a.name));
+    await Promise.all(games.map(async g => {
+      try{ const f = await gh("games/" + g.name); g.players = parseCSV(b64dec(f.content)); }catch{ g.players = []; }
+    }));
+  }
+  const meta = file => { const base = file.replace(/\.csv$/i,""); const m = base.match(/^(\d{4}-\d{2}-\d{2})\s*(.*)$/); return m ? {date:m[1], title:m[2]||"Game"} : {date:"", title:base}; };
+  const rosterKey = u => Object.keys(cfg.roster).find(k => k.toLowerCase() === u.toLowerCase());
+  const label = u => { const k = rosterKey(u); return k ? `${cfg.roster[k].name} (${u})` : u; };
+  const isViking = (file, u) => { const o = cfg.games[file] || {}; const inR = !!rosterKey(u); return (inR && !(o.notVikings||[]).includes(u)) || (o.alsoVikings||[]).includes(u); };
+  function setVikings(file, players, ticked){
+    const o = {...(cfg.games[file]||{})}; const not = [], also = [];
+    for (const u of players){ const inR = !!rosterKey(u), on = ticked.has(u); if (inR && !on) not.push(u); if (!inR && on) also.push(u); }
+    if (not.length) o.notVikings = not; else delete o.notVikings;
+    if (also.length) o.alsoVikings = also; else delete o.alsoVikings;
+    if (Object.keys(o).length) cfg.games[file] = o; else delete cfg.games[file];
+  }
+  const msg = (el, text, ok=true) => { el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); };
+
+  // ---------- roster UI ----------
+  function drawRoster(){
+    $("#rbody").innerHTML = rosterRows.map((r,i)=>`<tr>
+      <td><input type="text" data-i="${i}" data-f="user" value="${esc(r.user)}" placeholder="RobloxUser123" aria-label="Roblox username"></td>
+      <td><input type="text" data-i="${i}" data-f="name" value="${esc(r.name)}" placeholder="Nickname" aria-label="Nickname"></td>
+      <td class="n"><input type="number" min="0" max="99" data-i="${i}" data-f="number" value="${esc(r.number)}" aria-label="Jersey number"></td>
+      <td class="x"><button class="btn danger" style="padding:8px 12px" data-rm="${i}" aria-label="Remove player">✕</button></td></tr>`).join("");
+  }
+  $("#rbody").addEventListener("input", e => { const t = e.target; if (t.dataset.f) rosterRows[+t.dataset.i][t.dataset.f] = t.value; });
+  $("#rbody").addEventListener("click", e => { const b = e.target.closest("[data-rm]"); if (b){ rosterRows.splice(+b.dataset.rm,1); drawRoster(); } });
+  $("#addp").onclick = () => { rosterRows.push({user:"",name:"",number:""}); drawRoster(); $("#rbody tr:last-child input").focus(); };
+  $("#saver").onclick = async () => {
+    const m = $("#rmsg"), rows = rosterRows.map(r=>({user:r.user.trim(), name:r.name.trim(), number:String(r.number).trim()})).filter(r=>r.user);
+    const seen = new Set();
+    for (const r of rows){ const k = r.user.toLowerCase(); if (seen.has(k)) return msg(m, `${r.user} is listed twice.`, false); seen.add(k); }
+    const roster = {}; for (const r of rows) roster[r.user] = {name:r.name || r.user, number: r.number === "" ? null : +r.number};
+    $("#saver").disabled = true; msg(m, "Saving…");
+    try{ await loadCfg(); cfg.roster = roster; await saveCfg("Update roster"); msg(m, "Saved. Live in about a minute."); drawGames(); }
+    catch(e){ msg(m, "Couldn't save: " + e.message, false); }
+    $("#saver").disabled = false;
+  };
+
+  // ---------- add game ----------
+  const drop = $("#drop"), fileIn = $("#file");
+  drop.onclick = () => fileIn.click();
+  drop.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); fileIn.click(); } };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); };
+  fileIn.onchange = () => { if (fileIn.files[0]) readFile(fileIn.files[0]); fileIn.value = ""; };
+  async function readFile(f){
+    const text = await f.text(), players = parseCSV(text);
+    if (!players.length){ msg($("#nmsg"), "That file doesn't look like a UF stats CSV.", false); $("#newg").classList.remove("hide"); return; }
+    pending = {text, players};
+    $("#gdate").value = new Date().toLocaleDateString("en-CA");
+    $("#gtitle").value = "";
+    $("#gchecks").innerHTML = players.sort((a,b)=>(!!rosterKey(b))-(!!rosterKey(a)) || a.localeCompare(b)).map(u=>{
+      const on = !!rosterKey(u);
+      return `<label class="${on?"on":""}"><input type="checkbox" value="${esc(u)}" ${on?"checked":""}><span>${esc(label(u))}</span></label>`;
+    }).join("");
+    msg($("#nmsg"), `${players.length} players found in the file.`);
+    $("#newg").classList.remove("hide"); drop.classList.add("hide");
+    $("#gtitle").focus();
+  }
+  $("#gchecks").addEventListener("change", e => e.target.closest("label")?.classList.toggle("on", e.target.checked));
+  $("#cancelg").onclick = () => { pending = null; $("#newg").classList.add("hide"); drop.classList.remove("hide"); };
+  $("#saveg").onclick = async () => {
+    const m = $("#nmsg"), date = $("#gdate").value, title = $("#gtitle").value.trim().replace(/[\\/:*?"<>|]/g,"");
+    if (!pending) return;
+    if (!date) return msg(m, "Pick a date.", false);
+    if (!title) return msg(m, "Give the game a title, like “vs Saints”.", false);
+    const name = `${date} ${title}.csv`;
+    if (games.some(g => g.name === name)) return msg(m, "A game with that date and title already exists.", false);
+    const ticked = new Set([...$("#gchecks").querySelectorAll("input:checked")].map(i=>i.value));
+    $("#saveg").disabled = true; msg(m, "Uploading…");
+    try{
+      await put("games/" + name, pending.text, `Add game: ${date} ${title}`);
+      await loadCfg(); setVikings(name, pending.players, ticked);
+      if (cfg.games[name]) await saveCfg(`Set Vikings for ${title}`);
+      games.unshift({name, players:pending.players, sha:null});
+      await refreshGames();
+      $("#cancelg").click(); msg($("#nmsg"), "");
+      flash(`Added “${title}”. Live in about a minute.`);
+    }catch(e){ msg(m, "Couldn't add the game: " + e.message, false); }
+    $("#saveg").disabled = false;
+  };
+
+  // ---------- games list ----------
+  function drawGames(){
+    $("#gcount").textContent = games.length ? `${games.length} logged` : "";
+    $("#glist").innerHTML = games.length ? games.map((g,gi)=>{
+      const mt = meta(g.name), o = cfg.games[g.name] || {};
+      const vik = g.players.filter(u => isViking(g.name,u));
+      return `<div class="game" data-g="${gi}">
+        <div class="ghead"><div><div class="gtitle">${esc(o.title || mt.title)}</div><div class="gmeta">${esc(mt.date)} · ${vik.length} Vikings</div></div>
+          <div class="row"><button class="btn" data-act="edit">Edit</button><button class="btn danger" data-act="del">Delete</button></div></div>
+        <div class="chips">${vik.map(u=>`<span class="chip">${esc(rosterKey(u) ? cfg.roster[rosterKey(u)].name : u)}</span>`).join("") || '<span class="muted">No Vikings ticked</span>'}</div>
+        <div class="ged hide" style="display:flex;flex-direction:column;gap:10px">
+          <label class="f">Title shown on the site<input type="text" data-f="title" value="${esc(o.title || mt.title)}"></label>
+          <div class="checks">${g.players.slice().sort((a,b)=>(!!rosterKey(b))-(!!rosterKey(a)) || a.localeCompare(b)).map(u=>{ const on = isViking(g.name,u); return `<label class="${on?"on":""}"><input type="checkbox" value="${esc(u)}" ${on?"checked":""}><span>${esc(label(u))}</span></label>`; }).join("")}</div>
+          <div class="row"><button class="btn primary" data-act="save">Save game</button><button class="btn" data-act="close">Close</button><span class="msg"></span></div>
+        </div></div>`;
+    }).join("") : `<div class="empty">No games yet. Add one above.</div>`;
+  }
+  $("#glist").addEventListener("change", e => e.target.type === "checkbox" && e.target.closest("label")?.classList.toggle("on", e.target.checked));
+  $("#glist").addEventListener("click", async e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const card = b.closest(".game"), g = games[+card.dataset.g], ed = card.querySelector(".ged"), m = card.querySelector(".ged .msg");
+    const act = b.dataset.act;
+    if (act === "edit") return ed.classList.toggle("hide");
+    if (act === "close") return ed.classList.add("hide");
+    if (act === "save"){
+      b.disabled = true; msg(m, "Saving…");
+      try{
+        await loadCfg();
+        const ticked = new Set([...ed.querySelectorAll("input:checked")].map(i=>i.value));
+        setVikings(g.name, g.players, ticked);
+        const t = ed.querySelector("[data-f=title]").value.trim(), dflt = meta(g.name).title;
+        if (t && t !== dflt) (cfg.games[g.name] ||= {}).title = t; else if (cfg.games[g.name]){ delete cfg.games[g.name].title; if (!Object.keys(cfg.games[g.name]).length) delete cfg.games[g.name]; }
+        await saveCfg(`Edit game: ${t || dflt}`);
+        drawGames(); flash("Game saved. Live in about a minute.");
+      }catch(err){ msg(m, "Couldn't save: " + err.message, false); b.disabled = false; }
+    }
+    if (act === "del"){
+      if (b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "Tap again to delete"; setTimeout(()=>{ b.dataset.sure=""; b.textContent="Delete"; }, 4000); return; }
+      b.disabled = true;
+      try{
+        const f = await gh("games/" + g.name);
+        await del("games/" + g.name, f.sha, `Delete game: ${g.name}`);
+        await loadCfg(); if (cfg.games[g.name]){ delete cfg.games[g.name]; await saveCfg(`Remove settings for ${g.name}`); }
+        games = games.filter(x => x !== g); drawGames(); flash("Game deleted.");
+      }catch(err){ b.disabled = false; flash("Couldn't delete: " + err.message, false); }
+    }
+  });
+  async function refreshGames(){ games.sort((a,b)=>b.name.localeCompare(a.name)); drawGames(); }
+  function flash(text, ok=true){ const w = $("#who"); const old = w.dataset.base; msg(w, text, ok); clearTimeout(flash.t); flash.t = setTimeout(()=>{ w.className = "note"; w.textContent = old; }, 5000); }
+
+  // ---------- boot ----------
+  async function boot(){
+    const gm = $("#gmsg");
+    try{
+      msg(gm, "Checking token…");
+      await loadCfg(); await loadGames();
+      rosterRows = Object.entries(cfg.roster).map(([user,v])=>({user, name:v.name||"", number:v.number ?? ""}));
+      drawRoster(); drawGames();
+      $("#gate").classList.add("hide"); $("#app").classList.remove("hide");
+      const w = $("#who"); w.dataset.base = w.textContent = `Signed in · editing ${OWNER}/${REPO}`;
+    }catch(e){
+      $("#gate").classList.remove("hide"); $("#app").classList.add("hide");
+      msg(gm, e.status === 401 ? "That token didn't work. Check you copied all of it." : e.status === 404 || e.status === 403 ? "That token can't see the vikings-stats repo. Make sure it has Contents: Read and write on it." : "Couldn't connect: " + e.message, false);
+    }
+  }
+  $("#signin").onclick = () => { TOKEN = $("#tok").value.trim(); if (!TOKEN) return; try{ localStorage.setItem("vk_token", TOKEN); }catch{} boot(); };
+  $("#tok").onkeydown = e => { if (e.key === "Enter") $("#signin").click(); };
+  $("#signout").onclick = () => { try{ localStorage.removeItem("vk_token"); }catch{} TOKEN = ""; $("#tok").value = ""; $("#app").classList.add("hide"); $("#gate").classList.remove("hide"); msg($("#gmsg"), "Signed out."); };
+  if (TOKEN) boot();
+})();
+</script>
+</body></html>

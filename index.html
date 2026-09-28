@@ -101,7 +101,7 @@ footer{text-align:center;color:var(--mute);font-size:13px;letter-spacing:.1em}
     <div class="note">Tap a column to sort. Only players who played for the Vikings in each game count.</div>
   </section>
   <section class="panel"><h2>Game Log <small id="gcount"></small></h2><div class="games" id="games"></div></section>
-  <footer id="foot">Stats update automatically when a new game file is added.</footer>
+  <footer id="foot">Stats update automatically when a new game is added. · <a href="admin.html" style="color:var(--mute)">Admin</a></footer>
 </div>
 <script>
 (() => {
@@ -134,8 +134,9 @@ footer{text-align:center;color:var(--mute);font-size:13px;letter-spacing:.1em}
   }
 
   // ---------- aggregation ----------
-  const nm = u => roster[u]?.name || u;
-  const jn = u => roster[u]?.number ?? "";
+  const R = u => roster[String(u).toLowerCase()];
+  const nm = u => R(u)?.name || u;
+  const jn = u => R(u)?.number ?? "";
   function totals(){
     const t = {};
     for (const g of games){
@@ -223,13 +224,13 @@ footer{text-align:center;color:var(--mute);font-size:13px;letter-spacing:.1em}
   (async () => {
     try{
       const cfg = await (await fetch("config.json", {cache:"no-store"})).json();
-      roster = cfg.roster || {};
+      roster = Object.fromEntries(Object.entries(cfg.roster || {}).map(([k,v]) => [k.toLowerCase(), v]));
       const files = (await listFiles(cfg)).sort();
       const loaded = await Promise.all(files.map(async f => {
         const r = await fetch("games/" + encodeURIComponent(f), {cache:"no-store"});
         if (!r.ok) return null;
         const players = parseCSV(await r.text()), o = (cfg.games||{})[f] || {}, not = new Set(o.notVikings||[]);
-        const vikings = Object.keys(players).filter(u => (roster[u] && !not.has(u)) || (o.alsoVikings||[]).includes(u));
+        const vikings = Object.keys(players).filter(u => (R(u) && !not.has(u)) || (o.alsoVikings||[]).includes(u));
         return {...meta(f), ...(o.title?{title:o.title}:{}), players, vikings};
       }));
       games = loaded.filter(Boolean);
