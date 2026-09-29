@@ -102,6 +102,11 @@ a{color:var(--gold)}
 .tag{font-size:11px;letter-spacing:.12em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
 .tag.new{border-color:var(--gold);color:var(--gold)}
 .hide{display:none!important}
+.drow{display:grid;grid-template-columns:90px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line)}
+.drow .slots{display:flex;flex-wrap:wrap;gap:6px}
+.drow select{font:inherit;font-size:15px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;max-width:170px}
+.drow .pos{font:inherit;font-size:16px;font-weight:700;color:var(--gold);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;width:100%}
+.mini{padding:6px 10px;font-size:13px}
 </style></head><body>
 <div class="wrap">
   <header>
@@ -137,6 +142,14 @@ a{color:var(--gold)}
       <div class="row"><button class="btn primary" id="saver">Save roster</button><span class="msg" id="rmsg"></span></div>
     </section>
 
+    <!-- depth chart -->
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h2>Depth Chart</h2><button class="btn" id="addpos">+ Add position</button></div>
+      <div class="note">First player in each row is the starter. Save the roster first if you just added someone.</div>
+      <div id="dbody"></div>
+      <div class="row"><button class="btn primary" id="saved">Save depth chart</button><span class="msg" id="dmsg"></span></div>
+    </section>
+
     <!-- add game -->
     <section class="panel">
       <h2>Add a game</h2>
@@ -145,6 +158,10 @@ a{color:var(--gold)}
         <div class="row">
           <label class="f">Date<input type="date" id="gdate"></label>
           <label class="f" style="flex:2 1 220px">Title<input type="text" id="gtitle" placeholder="vs Saints"></label>
+        </div>
+        <div class="row">
+          <label class="f">Vikings score<input type="number" min="0" id="gus" placeholder="optional"></label>
+          <label class="f">Opponent score<input type="number" min="0" id="gthem" placeholder="optional"></label>
         </div>
         <div class="note">Tick everyone who played <b>for the Vikings</b> this game. Roster players are ticked automatically — untick anyone who was on the other team.</div>
         <div class="checks" id="gchecks"></div>
@@ -255,7 +272,7 @@ a{color:var(--gold)}
     for (const r of rows){ const k = r.user.toLowerCase(); if (seen.has(k)) return msg(m, `${r.user} is listed twice.`, false); seen.add(k); }
     const roster = {}; for (const r of rows) roster[r.user] = {name:r.name || r.user, number: r.number === "" ? null : +r.number};
     $("#saver").disabled = true; msg(m, "Saving…");
-    try{ await loadCfg(); cfg.roster = roster; await saveCfg("Update roster"); msg(m, "Saved. Live in about a minute."); drawGames(); }
+    try{ await loadCfg(); cfg.roster = roster; await saveCfg("Update roster"); msg(m, "Saved. Live in about a minute."); drawGames(); drawDepth(); }
     catch(e){ msg(m, "Couldn't save: " + e.message, false); }
     $("#saver").disabled = false;
   };
@@ -273,7 +290,7 @@ a{color:var(--gold)}
     if (!players.length){ msg($("#nmsg"), "That file doesn't look like a UF stats CSV.", false); $("#newg").classList.remove("hide"); return; }
     pending = {text, players};
     $("#gdate").value = new Date().toLocaleDateString("en-CA");
-    $("#gtitle").value = "";
+    $("#gtitle").value = ""; $("#gus").value = ""; $("#gthem").value = "";
     $("#gchecks").innerHTML = players.sort((a,b)=>(!!rosterKey(b))-(!!rosterKey(a)) || a.localeCompare(b)).map(u=>{
       const on = !!rosterKey(u);
       return `<label class="${on?"on":""}"><input type="checkbox" value="${esc(u)}" ${on?"checked":""}><span>${esc(label(u))}</span></label>`;
@@ -296,13 +313,40 @@ a{color:var(--gold)}
     try{
       await put("games/" + name, pending.text, `Add game: ${date} ${title}`);
       await loadCfg(); setVikings(name, pending.players, ticked);
-      if (cfg.games[name]) await saveCfg(`Set Vikings for ${title}`);
+      const us = $("#gus").value, them = $("#gthem").value;
+      if (us !== "" && them !== "") cfg.games[name] = {...(cfg.games[name]||{}), score:{us:+us, them:+them}};
+      if (cfg.games[name]) await saveCfg(`Set details for ${title}`);
       games.unshift({name, players:pending.players, sha:null});
       await refreshGames();
       $("#cancelg").click(); msg($("#nmsg"), "");
       flash(`Added “${title}”. Live in about a minute.`);
     }catch(e){ msg(m, "Couldn't add the game: " + e.message, false); }
     $("#saveg").disabled = false;
+  };
+
+  // ---------- depth chart ----------
+  let depthRows = [];
+  const loadDepth = () => { depthRows = Object.entries(cfg.depth || {}).map(([pos, list]) => ({pos, list:[...(list||[])]})); };
+  function drawDepth(){
+    const players = Object.entries(cfg.roster);
+    const opt = (sel) => `<option value="">— empty —</option>` + players.map(([u,v])=>`<option value="${esc(u)}" ${u.toLowerCase()===String(sel||"").toLowerCase()?"selected":""}>#${esc(v.number ?? "")} ${esc(v.name)}</option>`).join("");
+    $("#dbody").innerHTML = depthRows.map((r,i)=>`<div class="drow" data-i="${i}">
+      <input class="pos" data-f="pos" value="${esc(r.pos)}" aria-label="Position">
+      <div class="slots">${r.list.map((u,j)=>`<select data-j="${j}" aria-label="${esc(r.pos)} slot ${j+1}">${opt(u)}</select>`).join("")}<button class="btn mini" data-act="slot">+ slot</button></div>
+      <button class="btn danger mini" data-act="rmpos" aria-label="Remove position">✕</button></div>`).join("") || `<div class="empty">No positions yet.</div>`;
+  }
+  $("#dbody").addEventListener("change", e => { const row = e.target.closest(".drow"); if (!row) return; const r = depthRows[+row.dataset.i]; if (e.target.dataset.j != null) r.list[+e.target.dataset.j] = e.target.value; });
+  $("#dbody").addEventListener("input", e => { const row = e.target.closest(".drow"); if (row && e.target.dataset.f === "pos") depthRows[+row.dataset.i].pos = e.target.value; });
+  $("#dbody").addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; const i = +b.closest(".drow").dataset.i;
+    if (b.dataset.act === "slot") depthRows[i].list.push(""); else depthRows.splice(i,1); drawDepth(); });
+  $("#addpos").onclick = () => { depthRows.push({pos:"", list:[""]}); drawDepth(); $("#dbody .drow:last-child .pos").focus(); };
+  $("#saved").onclick = async () => {
+    const m = $("#dmsg"), d = {};
+    for (const r of depthRows){ const pos = r.pos.trim(); const list = r.list.filter(Boolean); if (!pos) continue; if (d[pos]) return msg(m, `${pos} is listed twice.`, false); d[pos] = [...new Set(list)]; }
+    $("#saved").disabled = true; msg(m, "Saving…");
+    try{ await loadCfg(); cfg.depth = d; await saveCfg("Update depth chart"); loadDepth(); drawDepth(); msg(m, "Saved. Live in about a minute."); }
+    catch(e){ msg(m, "Couldn't save: " + e.message, false); }
+    $("#saved").disabled = false;
   };
 
   // ---------- games list ----------
@@ -312,11 +356,12 @@ a{color:var(--gold)}
       const mt = meta(g.name), o = cfg.games[g.name] || {};
       const vik = g.players.filter(u => isViking(g.name,u));
       return `<div class="game" data-g="${gi}">
-        <div class="ghead"><div><div class="gtitle">${esc(o.title || mt.title)}</div><div class="gmeta">${esc(mt.date)} · ${vik.length} Vikings</div></div>
+        <div class="ghead"><div><div class="gtitle">${esc(o.title || mt.title)}</div><div class="gmeta">${esc(mt.date)} · ${vik.length} Vikings${o.score ? ` · <b style="color:${o.score.us>o.score.them?"var(--good)":o.score.us<o.score.them?"var(--bad)":"var(--mute)"}">${o.score.us>o.score.them?"W":o.score.us<o.score.them?"L":"T"} ${esc(o.score.us)}–${esc(o.score.them)}</b>` : " · no score"}</div></div>
           <div class="row"><button class="btn" data-act="edit">Edit</button><button class="btn danger" data-act="del">Delete</button></div></div>
         <div class="chips">${vik.map(u=>`<span class="chip">${esc(rosterKey(u) ? cfg.roster[rosterKey(u)].name : u)}</span>`).join("") || '<span class="muted">No Vikings ticked</span>'}</div>
         <div class="ged hide" style="display:flex;flex-direction:column;gap:10px">
           <label class="f">Title shown on the site<input type="text" data-f="title" value="${esc(o.title || mt.title)}"></label>
+          <div class="row"><label class="f">Vikings score<input type="number" min="0" data-f="us" value="${esc(o.score?.us ?? "")}"></label><label class="f">Opponent score<input type="number" min="0" data-f="them" value="${esc(o.score?.them ?? "")}"></label></div>
           <div class="checks">${g.players.slice().sort((a,b)=>(!!rosterKey(b))-(!!rosterKey(a)) || a.localeCompare(b)).map(u=>{ const on = isViking(g.name,u); return `<label class="${on?"on":""}"><input type="checkbox" value="${esc(u)}" ${on?"checked":""}><span>${esc(label(u))}</span></label>`; }).join("")}</div>
           <div class="row"><button class="btn primary" data-act="save">Save game</button><button class="btn" data-act="close">Close</button><span class="msg"></span></div>
         </div></div>`;
@@ -335,6 +380,8 @@ a{color:var(--gold)}
         await loadCfg();
         const ticked = new Set([...ed.querySelectorAll("input:checked")].map(i=>i.value));
         setVikings(g.name, g.players, ticked);
+        const us = ed.querySelector("[data-f=us]").value, them = ed.querySelector("[data-f=them]").value;
+        if (us !== "" && them !== "") (cfg.games[g.name] ||= {}).score = {us:+us, them:+them}; else if (cfg.games[g.name]){ delete cfg.games[g.name].score; if (!Object.keys(cfg.games[g.name]).length) delete cfg.games[g.name]; }
         const t = ed.querySelector("[data-f=title]").value.trim(), dflt = meta(g.name).title;
         if (t && t !== dflt) (cfg.games[g.name] ||= {}).title = t; else if (cfg.games[g.name]){ delete cfg.games[g.name].title; if (!Object.keys(cfg.games[g.name]).length) delete cfg.games[g.name]; }
         await saveCfg(`Edit game: ${t || dflt}`);
@@ -362,7 +409,7 @@ a{color:var(--gold)}
       msg(gm, "Checking token…");
       await loadCfg(); await loadGames();
       rosterRows = Object.entries(cfg.roster).map(([user,v])=>({user, name:v.name||"", number:v.number ?? ""}));
-      drawRoster(); drawGames();
+      drawRoster(); drawGames(); loadDepth(); drawDepth();
       $("#gate").classList.add("hide"); $("#app").classList.remove("hide");
       const w = $("#who"); w.dataset.base = w.textContent = `Signed in · editing ${OWNER}/${REPO}`;
     }catch(e){

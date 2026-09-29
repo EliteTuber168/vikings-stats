@@ -1,17 +1,87 @@
 {
   "team": "Vikings",
   "roster": {
-    "Dart6760": {"name": "Dart", "number": 7},
-    "Sequnse": {"name": "Sequense", "number": 12},
-    "Stealabrainrot57528": {"name": "Brainrot", "number": 22},
-    "LT_isawesome": {"name": "LT", "number": 27},
-    "ddupont1": {"name": "Ddupont", "number": 8},
-    "Plumekod": {"name": "Plume", "number": 11},
-    "crazyandrew612": {"name": "CrazyAndrew", "number": 3},
-    "Thekingofsoccer2022": {"name": "King", "number": 17}
+    "Dart6760": {
+      "name": "Dart",
+      "number": 7
+    },
+    "Sequnse": {
+      "name": "Sequense",
+      "number": 12
+    },
+    "Stealabrainrot57528": {
+      "name": "Brainrot",
+      "number": 22
+    },
+    "LT_isawesome": {
+      "name": "LT",
+      "number": 27
+    },
+    "ddupont1": {
+      "name": "Ddupont",
+      "number": 8
+    },
+    "Plumekod": {
+      "name": "Plume",
+      "number": 11
+    },
+    "crazyandrew612": {
+      "name": "CrazyAndrew",
+      "number": 3
+    },
+    "Thekingofsoccer2022": {
+      "name": "King",
+      "number": 17
+    }
   },
   "games": {
-    "2026-09-27 vs Saints.csv": {"notVikings": ["Stealabrainrot57528"]}
+    "2026-09-27 vs Saints.csv": {
+      "notVikings": [
+        "Stealabrainrot57528"
+      ]
+    }
   },
-  "_help": "Roster players in a game's CSV count as Vikings automatically. For a game where a roster player was on the OTHER team, list their username under notVikings for that file. To count a non-roster player, list them under alsoVikings."
+  "_help": "Roster players in a game's CSV count as Vikings automatically. For a game where a roster player was on the OTHER team, list their username under notVikings for that file. To count a non-roster player, list them under alsoVikings.",
+  "depth": {
+    "QB": [
+      "Dart6760",
+      "Sequnse"
+    ],
+    "RB": [
+      "Stealabrainrot57528"
+    ],
+    "WR": [
+      "ddupont1",
+      "Plumekod",
+      "crazyandrew612",
+      "Thekingofsoccer2022"
+    ],
+    "TE": [
+      "LT_isawesome"
+    ],
+    "DE": [
+      "LT_isawesome"
+    ],
+    "OLB": [
+      "ddupont1",
+      "Thekingofsoccer2022"
+    ],
+    "MLB": [
+      "crazyandrew612"
+    ],
+    "CB": [
+      "Dart6760",
+      "Plumekod"
+    ],
+    "S": [
+      "Sequnse"
+    ],
+    "K/P": [
+      "crazyandrew612",
+      "Thekingofsoccer2022"
+    ],
+    "KR": [
+      "ddupont1"
+    ]
+  }
 }

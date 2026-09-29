@@ -5,10 +5,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Permanent+Marker&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>body{margin:0}
-/* Layout: stadium-night stat book — season strip, leader boards, tabbed stat tables, game log + CSV drop. Single dark look by choice. */
+/* Stadium-night stat book: sticky section nav, hash-routed views. Single dark look by choice. */
 :root{
   --bg:#0c0717; --panel:#160e28; --panel2:#1e1436; --line:#33255a; --fg:#efeaf8; --mute:#a99ec6;
-  --accent:#9b5cff; --accent2:#6f33e0; --gold:#ffc62f; --good:#5fd38a; --bad:#ff6b7a;
+  --accent:#9b5cff; --accent2:#6f33e0; --gold:#ffc62f; --good:#5fd38a; --bad:#ff6b7a; --warn:#ffa24a;
   --display:"Permanent Marker","Comic Sans MS",cursive; --num:"Bebas Neue",Impact,"Arial Narrow",sans-serif;
   --body:"Rajdhani",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
@@ -16,98 +16,135 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;font-weight:500;line-height:1.4}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 40% at 50% -5%,rgba(155,92,255,.28),transparent 70%)}
-.wrap{position:relative;max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:28px}
-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+a{color:inherit}
+.wrap{position:relative;max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
 .eyebrow{font-size:13px;letter-spacing:.42em;color:var(--gold);font-weight:700;text-transform:uppercase}
 h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(40px,7vw,76px);line-height:1;transform:rotate(-2deg);text-shadow:0 4px 0 var(--accent2),0 8px 18px rgba(0,0,0,.6);text-wrap:balance}
 h1 span{color:var(--accent)}
 .sub{color:var(--mute);font-size:15px;letter-spacing:.06em}
+.record{font-family:var(--num);font-size:30px;letter-spacing:.08em;line-height:1;color:var(--gold)}
 h2{margin:0;font-family:var(--num);font-weight:400;font-size:30px;letter-spacing:.08em;line-height:1}
 h2 small{font-family:var(--body);font-size:14px;color:var(--mute);letter-spacing:.1em;margin-left:10px;font-weight:600}
+h3{margin:0;font-size:13px;letter-spacing:.2em;color:var(--gold);font-weight:700;text-transform:uppercase}
 .num{font-variant-numeric:tabular-nums}
-.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+nav.nav{position:sticky;top:0;z-index:5;margin-inline:-16px;padding:10px 16px;background:rgba(12,7,23,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.nav::-webkit-scrollbar{display:none}
+nav.nav a{flex:none;text-decoration:none;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+nav.nav a[aria-current="page"]{color:#140a26;background:var(--gold);border-color:var(--gold)}
+#view{display:flex;flex-direction:column;gap:24px;min-width:0}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .tile{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:12px 14px}
-.tile b{display:block;font-family:var(--num);font-weight:400;font-size:44px;line-height:1}
-.tile span{font-size:13px;letter-spacing:.16em;color:var(--mute);font-weight:700;text-transform:uppercase}
-.leaders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.lcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.lcard h3{margin:0;font-size:13px;letter-spacing:.2em;color:var(--gold);font-weight:700;text-transform:uppercase}
-.lrow{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px}
-.lrow .jn{width:38px;height:38px;border-radius:50%;background:linear-gradient(180deg,var(--accent),var(--accent2));border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--num);font-size:20px;padding-top:2px}
-.lrow:not(:first-of-type) .jn{background:var(--panel2);border-color:var(--line);font-size:18px}
-.lrow .nm{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile b{display:block;font-family:var(--num);font-weight:400;font-size:40px;line-height:1}
+.tile span{font-size:12px;letter-spacing:.16em;color:var(--mute);font-weight:700;text-transform:uppercase}
+.tile.w b{color:var(--good)} .tile.l b{color:var(--bad)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.phead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.phead a{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.lrow{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;text-decoration:none}
+.jn{width:38px;height:38px;border-radius:50%;background:var(--panel);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--num);font-size:19px;padding-top:2px;flex:none}
+.lrow:first-of-type .jn{background:linear-gradient(180deg,var(--accent),var(--accent2));border-color:var(--gold)}
+.nm{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lrow .v{font-family:var(--num);font-size:28px;line-height:1}
 .lrow:first-of-type .v{color:var(--gold)}
 .muted{color:var(--mute)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.note{font-size:14px;color:var(--mute)}
 .tabs{display:flex;flex-wrap:wrap;gap:6px}
 .tabs button{font:inherit;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--mute);background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
 .tabs button[aria-selected="true"]{color:#140a26;background:var(--gold);border-color:var(--gold)}
-.tabs button:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .tscroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:640px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.wide{min-width:640px}
 th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase;cursor:pointer;user-select:none}
+th{font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase}
+th[data-k]{cursor:pointer;user-select:none}
 th.sorted{color:var(--gold)} th.sorted::after{content:" ▾"}
 th:first-child,td:first-child{text-align:left}
 td:first-child{font-weight:700}
-td .jn{display:inline-block;min-width:30px;font-family:var(--num);color:var(--gold);font-size:18px}
+td a{text-decoration:none}
+td .n{display:inline-block;min-width:30px;font-family:var(--num);color:var(--gold);font-size:18px}
 tbody tr:hover{background:rgba(155,92,255,.08)}
 .empty{padding:22px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:12px}
-.grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
-@media (max-width:860px){.grid2{grid-template-columns:1fr}}
-.games{display:flex;flex-direction:column;gap:10px}
-.game{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
-.ghead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
-.gtitle{font-family:var(--num);font-size:24px;letter-spacing:.04em;line-height:1}
-.gmeta{font-size:14px;color:var(--mute)}
+.ovr{display:inline-flex;align-items:center;justify-content:center;min-width:46px;height:34px;border-radius:8px;font-family:var(--num);font-size:24px;padding:2px 8px 0;color:#140a26;background:var(--mute)}
+.g-S{background:linear-gradient(135deg,#ffe27a,var(--gold))} .g-A{background:var(--good)} .g-B{background:#7cc4ff} .g-C{background:var(--warn)} .g-D{background:var(--bad)}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 10px;border:1px solid var(--gold);color:var(--gold);background:rgba(255,198,47,.08);white-space:nowrap}
+.badge.neg{border-color:var(--bad);color:var(--bad);background:rgba(255,107,122,.08)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--fg);background:rgba(255,255,255,.03)}
-.btn{font:inherit;font-weight:700;letter-spacing:.08em;font-size:14px;border-radius:10px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--fg)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.gold{background:var(--gold);border-color:var(--gold);color:#140a26}
-.btn.danger{border-color:var(--bad);color:var(--bad)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase;flex:1 1 150px;min-width:0}
-input[type=text],input[type=date],input[type=number]{font:inherit;font-size:16px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
-.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
-.checks label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;padding:6px 8px;border:1px solid var(--line);border-radius:8px;cursor:pointer;min-width:0}
-.checks label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.checks label.on{border-color:var(--accent);background:rgba(155,92,255,.12)}
-.checks input{accent-color:var(--accent)}
-.drop{border:2px dashed var(--accent);border-radius:14px;padding:22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;background:rgba(155,92,255,.06);cursor:pointer}
-.drop.over{background:rgba(155,92,255,.18)}
-.drop b{font-family:var(--num);font-size:26px;letter-spacing:.06em;font-weight:400}
-.note{font-size:14px;color:var(--mute)}
-.msg{font-size:14px;font-weight:700}
-.msg.ok{color:var(--good)} .msg.err{color:var(--bad)}
-.roster td input{max-width:160px}
-.roster td input[type=number]{max-width:80px}
+.chip{font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.03);text-decoration:none}
+.fix{display:flex;flex-direction:column;gap:8px}
+.fix li{list-style:none;border-left:3px solid var(--warn);padding:4px 0 4px 10px}
+.fix li.good{border-color:var(--good)}
+.fix li b{display:block;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.fix li span{color:var(--mute);font-size:15px}
+.fix{margin:0;padding:0}
+.pcard{text-decoration:none;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.bignum{font-family:var(--num);font-size:44px;line-height:1;color:var(--gold);min-width:48px;text-align:center}
+.pcard .who{min-width:0}
+.pcard .who small{display:block;color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pos{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--accent)}
+.game{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:14px;display:flex;flex-direction:column;gap:12px}
+.ghead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gtitle{font-family:var(--num);font-size:26px;letter-spacing:.04em;line-height:1}
+.gmeta{font-size:14px;color:var(--mute)}
+.res{font-family:var(--num);font-size:28px;line-height:1;letter-spacing:.04em}
+.res.W{color:var(--good)} .res.L{color:var(--bad)} .res.T{color:var(--mute)}
+.pog{display:flex;align-items:center;gap:10px;border:1px solid var(--gold);background:rgba(255,198,47,.06);border-radius:10px;padding:8px 10px}
+.pog .lbl{font-size:11px;letter-spacing:.2em;font-weight:700;color:var(--gold)}
+.perf{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.perf div{font-size:14px;color:var(--mute)} .perf b{color:var(--fg)}
+details summary{cursor:pointer;font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+details[open] summary{margin-bottom:8px}
+.sel{font:inherit;font-size:16px;font-weight:700;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.cmp{display:flex;flex-direction:column;gap:2px}
+.crow{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.crow .lab{text-align:center;font-size:12px;letter-spacing:.12em;font-weight:700;color:var(--mute);text-transform:uppercase}
+.crow .side{display:flex;align-items:center;gap:8px;font-family:var(--num);font-size:22px}
+.crow .side.l{justify-content:flex-end}
+.bar{height:8px;border-radius:4px;background:var(--line);flex:1;position:relative;overflow:hidden;max-width:160px}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--mute);border-radius:4px}
+.side.l .bar i{inset:0 0 0 auto}
+.side.win{color:var(--gold)} .side.win .bar i{background:var(--gold)}
+@media (max-width:520px){.crow{grid-template-columns:1fr 90px 1fr}.bar{display:none}}
+.depth{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.slot{display:flex;align-items:center;gap:10px;text-decoration:none;padding:6px 0}
+.slot .ord{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--mute);width:44px;flex:none}
+.slot:first-of-type .ord{color:var(--gold)}
+.prof{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.prof .bignum{font-size:84px;min-width:90px}
+.prof h2{font-size:44px}
+.prof .meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.kv div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kv b{display:block;font-family:var(--num);font-size:26px;font-weight:400;line-height:1}
+.kv span{font-size:11px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase}
+.back{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);text-decoration:none}
 footer{text-align:center;color:var(--mute);font-size:13px;letter-spacing:.1em}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+footer a{color:var(--mute)}
 </style></head><body>
 <div class="wrap">
   <header>
     <div class="eyebrow">Universe Football · 2026 Season</div>
     <h1>VIKINGS <span>STAT BOOK</span></h1>
+    <div class="record" id="record"></div>
     <div class="sub" id="sub">Loading season…</div>
   </header>
-  <section class="strip" id="strip" aria-label="Season totals"></section>
-  <section class="panel"><h2>Season Leaders</h2><div class="leaders" id="leaders"></div></section>
-  <section class="panel">
-    <div class="row" style="justify-content:space-between"><h2>Player Stats</h2><div class="tabs" role="tablist" id="tabs"></div></div>
-    <div class="tscroll" id="table"></div>
-    <div class="note">Tap a column to sort. Only players who played for the Vikings in each game count.</div>
-  </section>
-  <section class="panel"><h2>Game Log <small id="gcount"></small></h2><div class="games" id="games"></div></section>
-  <footer id="foot">Stats update automatically when a new game is added. · <a href="admin.html" style="color:var(--mute)">Admin</a></footer>
+  <nav class="nav" aria-label="Sections">
+    <a href="#/">Overview</a><a href="#/rankings">Rankings</a><a href="#/players">Players</a><a href="#/games">Games</a><a href="#/compare">Compare</a><a href="#/depth">Depth Chart</a>
+  </nav>
+  <main id="view"></main>
+  <footer>Stats update automatically when a new game is added. · <a href="admin.html">Admin</a></footer>
 </div>
 <script>
 (() => {
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  let games = [], roster = {}, tab = "passing", sortKey = null;
+  let games = [], roster = {}, cfg = {}, T = {}, P = [], tab = "passing", sortKey = null, loaded = false;
   const SECS = ["Passing","Rushing","Receiving","Cornerback","DLine","SpecialTeams"];
   function parseCSV(text){
     const out = {}; let sec = null, head = null;
@@ -133,111 +170,333 @@ footer{text-align:center;color:var(--mute);font-size:13px;letter-spacing:.1em}
     return out;
   }
 
-  // ---------- aggregation ----------
+  // ---------- helpers ----------
   const R = u => roster[String(u).toLowerCase()];
   const nm = u => R(u)?.name || u;
   const jn = u => R(u)?.number ?? "";
-  function totals(){
-    const t = {};
-    for (const g of games){
-      for (const u of (g.vikings||[])){
-        const s = g.players?.[u]; if (!s) continue;
-        const a = t[u] || (t[u] = {gp:0}); a.gp++;
-        for (const k in s) a[k] = (a[k]||0) + s[k];
-      }
-    }
-    for (const u in t){
-      const a = t[u];
-      a.cpct = a.att ? a.cmp/a.att*100 : null;
-      a.rate = a.att ? rating(a) : null;
-      a.ypr = a.rec ? a.cyd/a.rec : null;
-      a.ypt = a.ctg ? (a.ya||0)/a.ctg : null;
-      a.tds = (a.ctd||0)+(a.rtd||0)+(a.itd||0)+(a.krtd||0);
-    }
-    return t;
+  const f0 = v => v == null || !isFinite(v) ? "–" : Math.round(v).toLocaleString();
+  const f1 = v => v == null || !isFinite(v) ? "–" : v.toFixed(1);
+  const pct = v => v == null || !isFinite(v) ? "–" : Math.round(v*100) + "%";
+  const plink = (u, inner) => `<a href="#/player/${encodeURIComponent(u)}">${inner}</a>`;
+  const numDot = u => `<div class="jn">${esc(jn(u)) || "–"}</div>`;
+
+  // impact points: a simple all-around production score used for OVR, player of the game and best game
+  const W = {pyd:.04, ptd:4, pint:-2, sk:-.5, ryd:.1, rtd:6, rec:.5, cyd:.1, ctd:6, drp:-1,
+             tkl:1, tfl:1, int:5, itd:6, pbu:1.5, tda:-2, ya:-.03, sck:3, prs:.8, qbh:.5, ff:2, fr:2,
+             fgm:1, fga:-.5, kry:.03, krtd:6, in10:.5};
+  const impact = s => Object.keys(W).reduce((t,k)=>t + (s[k]||0)*W[k], 0);
+  function derive(a){
+    a.cpct = a.att ? a.cmp/a.att : null;
+    a.rate = a.att ? rating(a) : null;
+    a.ypr = a.rec ? a.cyd/a.rec : null;
+    a.catch = a.tgt ? a.rec/a.tgt : null;
+    a.ypt = a.ctg ? (a.ya||0)/a.ctg : null;
+    a.caPct = a.ctg ? (a.ca||0)/a.ctg : null;
+    a.prRate = a.pr ? (a.prs||0)/a.pr : null;
+    a.fgPct = a.fga ? a.fgm/a.fga : null;
+    a.tds = (a.ctd||0)+(a.rtd||0)+(a.itd||0)+(a.krtd||0);
+    a.imp = impact(a); a.ipg = a.gp ? a.imp/a.gp : 0;
+    return a;
   }
   function rating(a){
     const c = x => Math.max(0, Math.min(2.375, x));
     const A = c((a.cmp/a.att - .3)*5), B = c(((a.pyd||0)/a.att - 3)*.25), C = c((a.ptd||0)/a.att*20), D = c(2.375 - (a.pint||0)/a.att*25);
     return (A+B+C+D)/6*100;
   }
-  const f0 = v => v == null ? "–" : Math.round(v).toLocaleString();
-  const f1 = v => v == null ? "–" : v.toFixed(1);
+  const grade = o => o >= 90 ? "S" : o >= 80 ? "A" : o >= 70 ? "B" : o >= 60 ? "C" : "D";
+  const ovrTag = u => { const o = T[u]?.ovr; return o == null ? "" : `<span class="ovr g-${grade(o)}" title="Overall rating">${o}</span>`; };
+  function statline(s){
+    const out = [];
+    if (s.att) out.push(`${s.cmp||0}/${s.att}, ${s.pyd||0} pass yds, ${s.ptd||0} TD${s.pint?`, ${s.pint} INT`:""}`);
+    if (s.tgt || s.rec) out.push(`${s.rec||0} rec, ${s.cyd||0} yds${s.ctd?`, ${s.ctd} TD`:""}`);
+    if (s.ra) out.push(`${s.ra} rush, ${s.ryd||0} yds${s.rtd?`, ${s.rtd} TD`:""}`);
+    const d = []; if (s.tkl) d.push(`${s.tkl} tkl`); if (s.int) d.push(`${s.int} INT`); if (s.pbu) d.push(`${s.pbu} PBU`); if (s.sck) d.push(`${s.sck} sack${s.sck>1?"s":""}`); if (s.prs) d.push(`${s.prs} pressure${s.prs>1?"s":""}`);
+    if (d.length) out.push(d.join(", "));
+    if (s.fga) out.push(`${s.fgm||0}/${s.fga} FG/XP`);
+    if (s.kr) out.push(`${s.kr} KR, ${s.kry||0} yds`);
+    return out.join(" · ") || "No stats";
+  }
 
+  // ---------- aggregate ----------
+  function build(){
+    T = {};
+    for (const g of games){
+      g.imp = {};
+      for (const u of g.vikings){
+        const s = g.players[u]; if (!s) continue;
+        g.imp[u] = impact(s);
+        const a = T[u] || (T[u] = {gp:0, log:[]}); a.gp++; a.log.push(g);
+        for (const k in s) a[k] = (a[k]||0) + s[k];
+      }
+      const ranked = Object.keys(g.imp).sort((a,b)=>g.imp[b]-g.imp[a]); g.pog = ranked[0] || null;
+    }
+    P = Object.keys(T);
+    P.forEach(u => derive(T[u]));
+    const top = Math.max(1, ...P.map(u => T[u].ipg));
+    P.forEach(u => { const x = T[u].ipg; T[u].ovr = Math.max(40, Math.round(45 + 54*(x/top))); });
+    P.sort((a,b)=>T[b].ovr - T[a].ovr || T[b].ipg - T[a].ipg);
+    P.forEach((u,i) => T[u].rank = i+1);
+    awardBadges();
+  }
+
+  // ---------- badges ----------
+  const BADGES = [
+    ["Gunslinger","Most passing TDs", "ptd", 3],
+    ["Air Raid","Most passing yards", "pyd", 200],
+    ["End Zone Magnet","Most total TDs scored", "tds", 2],
+    ["Deep Threat","Best yards per catch (min 4 catches)", a => a.rec >= 4 ? a.ypr : 0, 12],
+    ["Sure Hands","Best catch rate (min 5 targets)", a => a.tgt >= 5 && !a.drp ? a.catch : 0, .7],
+    ["YAC King","Most yards after catch", "yac", 30],
+    ["Ball Hawk","Most interceptions", "int", 2],
+    ["Lockdown","Fewest yards per target allowed (min 5 targets)", a => a.ctg >= 5 ? 100 - a.ypt : 0, 90],
+    ["Tackle Machine","Most tackles", "tkl", 6],
+    ["QB Hunter","Most QB pressures", "prs", 5],
+    ["Sack Master","Most sacks", "sck", 1],
+    ["Return Man","Most kick return yards", "kry", 40],
+    ["Money Leg","Perfect on kicks (min 3)", a => a.fga >= 3 && a.fgm === a.fga ? a.fga : 0, 3],
+    ["Butterfingers","Most drops", "drp", 2, true],
+    ["Pick Machine","Most interceptions thrown", "pint", 3, true],
+  ];
+  function awardBadges(){
+    P.forEach(u => T[u].badges = []);
+    for (const [name, desc, key, min, neg] of BADGES){
+      const val = u => typeof key === "function" ? key(T[u]) : (T[u][key]||0);
+      const best = P.filter(u => val(u) >= min).sort((a,b)=>val(b)-val(a))[0];
+      if (best) T[best].badges.push({name, desc, neg:!!neg});
+    }
+    const all = games.length;
+    if (all >= 3) P.forEach(u => { if (T[u].gp === all) T[u].badges.push({name:"Iron Man", desc:"Played every game"}); });
+  }
+  const badgeHTML = (u, max=9) => T[u].badges.slice(0,max).map(b=>`<span class="badge${b.neg?" neg":""}" title="${esc(b.desc)}">${esc(b.name)}</span>`).join("");
+
+  // ---------- coach notes ----------
+  function notes(a){
+    const bad = [], good = [];
+    const B = (sev, t, n) => bad.push({sev, t, n}), G = (sc, t, n) => good.push({sc, t, n});
+    if (a.att >= 8){
+      const ir = a.pint/a.att;
+      if (ir >= .06) B(ir*10, "Ball security", `${a.pint} INTs on ${a.att} throws (${pct(ir)}). Stop forcing it into coverage — check it down when nothing's open.`);
+      if (a.cpct < .55) B((.55-a.cpct)*10, "Accuracy", `Completing ${pct(a.cpct)}. Take the easy throws and hit guys in stride.`);
+      if (a.sk >= 2) B(a.sk*.3, "Pocket presence", `Sacked ${a.sk} times. Get the ball out quicker.`);
+      if (a.rate >= 100) G(a.rate/100, "Efficient passer", `${f1(a.rate)} passer rating.`);
+      if (a.ptd >= 2*a.gp) G(a.ptd/a.gp, "TD machine", `${a.ptd} passing TDs in ${a.gp} game${a.gp>1?"s":""}.`);
+    }
+    if (a.tgt >= Math.max(5, 2*a.gp)){
+      if (a.drp >= 2 || a.drp/a.tgt >= .15) B(a.drp*.6, "Hands", `${a.drp} drop${a.drp>1?"s":""} on ${a.tgt} targets. Look it all the way in before you run.`);
+      if (a.catch < .55) B((.55-a.catch)*8, "Catching / getting open", `Catching ${pct(a.catch)} of targets. Sharpen routes and win at the catch point.`);
+      if (a.rec >= 3 && a.ypr < 8) B(1, "Big plays", `${f1(a.ypr)} yards per catch. Work on getting downfield and making guys miss.`);
+      if (a.rec >= 3 && a.ypr >= 15) G(a.ypr/15, "Big-play threat", `${f1(a.ypr)} yards per catch.`);
+      if (a.tgt >= 4 && a.catch >= .75) G(a.catch*2, "Reliable target", `Catches ${pct(a.catch)} of targets.`);
+      if (a.ctd >= a.gp) G(a.ctd/a.gp, "Red-zone weapon", `${a.ctd} receiving TDs.`);
+    }
+    if (a.ctg >= 4){
+      if (a.caPct > .65) B((a.caPct-.65)*10, "Coverage", `Allowing ${pct(a.caPct)} completions when targeted. Play tighter — stay in the receiver's hip pocket.`);
+      if (a.ypt > 12) B((a.ypt-12)/4, "Giving up big plays", `${f1(a.ypt)} yards allowed per target. Don't bite — keep everything in front.`);
+      if (a.tda >= 2) B(a.tda*.5, "TDs allowed", `${a.tda} TDs given up in coverage.`);
+      if (a.ctg >= 5 && a.ypt <= 6) G(2, "Lockdown coverage", `Only ${f1(a.ypt)} yards allowed per target.`);
+    }
+    if (a.int >= 2) G(a.int, "Ball hawk", `${a.int} interceptions${a.pbu?` and ${a.pbu} pass breakups`:""}.`);
+    if (a.pr >= 5){
+      if (a.prRate < .25) B((.25-a.prRate)*8, "Pass-rush win rate", `${a.prs||0} pressures on ${a.pr} rushes. Work on your moves off the line.`);
+      if (!a.sck && a.pr >= 10) B(.8, "Finishing sacks", `No sacks on ${a.pr} rushes. Finish the play when you get home.`);
+      if (a.prRate >= .4) G(a.prRate*3, "Disruptor", `Pressures the QB on ${pct(a.prRate)} of rushes.`);
+    }
+    if ((a.ctg||0) + (a.pr||0) >= 5 && (a.tkl||0)/a.gp < 1.5) B(.6, "Tackling", `${a.tkl||0} tackles in ${a.gp} game${a.gp>1?"s":""}. Rally to the ball and finish plays.`);
+    if (a.tkl/a.gp >= 4) G(a.tkl/a.gp/2, "Tackle machine", `${f1(a.tkl/a.gp)} tackles per game.`);
+    if (a.fga >= 2 && a.fgPct < .8) B((.8-a.fgPct)*6, "Kicking accuracy", `${a.fgm}/${a.fga} on kicks. Get reps in practice.`);
+    if (a.fga >= 3 && a.fgPct === 1) G(1, "Automatic", `${a.fgm}/${a.fga} on kicks.`);
+    bad.sort((x,y)=>y.sev-x.sev); good.sort((x,y)=>y.sc-x.sc);
+    return {bad, good};
+  }
+  const fixList = (items, cls="") => `<ul class="fix">${items.map(i=>`<li class="${cls}"><b>${esc(i.t)}</b><span>${esc(i.n)}</span></li>`).join("")}</ul>`;
+
+  // ---------- positions from depth chart ----------
+  const depth = () => cfg.depth || {};
+  function positions(u){
+    const out = []; const lu = u.toLowerCase();
+    for (const [pos, list] of Object.entries(depth())){ const i = (list||[]).findIndex(x => String(x).toLowerCase() === lu); if (i >= 0) out.push(pos + (list.length > 1 ? i+1 : "")); }
+    return out;
+  }
+
+  // ---------- views ----------
   const TABLES = {
-    passing:{label:"Passing", show:a=>a.att, sort:"pyd", cols:[
-      ["gp","GP",f0],["cmp","CMP",f0],["att","ATT",f0],["cpct","CMP%",f1],["pyd","YDS",f0],["ptd","TD",f0],["pint","INT",f0],["rate","RATE",f1],["sk","SACKED",f0]]},
-    offense:{label:"Receiving & Rushing", show:a=>a.tgt||a.ra, sort:"cyd", cols:[
-      ["gp","GP",f0],["rec","REC",f0],["tgt","TGT",f0],["cyd","REC YDS",f0],["ypr","Y/REC",f1],["ctd","REC TD",f0],["yac","YAC",f0],["trf","TRAFFIC",f0],["ra","RUSH",f0],["ryd","RUSH YDS",f0],["rtd","RUSH TD",f0]]},
-    defense:{label:"Coverage", show:a=>a.tkl||a.ctg||a.int, sort:"int", cols:[
-      ["gp","GP",f0],["tkl","TKL",f0],["tfl","TFL",f0],["int","INT",f0],["pbu","PBU",f0],["ctg","TGT",f0],["ca","CMP ALW",f0],["ya","YDS ALW",f0],["ypt","YDS/TGT",f1],["tda","TD ALW",f0]]},
-    rush:{label:"Pass Rush", show:a=>a.pr||a.prs||a.sck, sort:"prs", cols:[
-      ["gp","GP",f0],["pr","RUSHES",f0],["prs","PRESSURES",f0],["sck","SACKS",f0],["qbh","QB HITS",f0],["ff","FF",f0],["fr","FR",f0]]},
-    st:{label:"Special Teams", show:a=>a.fga||a.kr||a.pnt, sort:"fgm", cols:[
-      ["gp","GP",f0],["fgm","FG/XP MADE",f0],["fga","ATT",f0],["kr","KR",f0],["kry","KR YDS",f0],["krtd","KR TD",f0],["pnt","PUNTS",f0],["in10","INSIDE 10",f0]]},
+    passing:{label:"Passing", show:a=>a.att, sort:"pyd", cols:[["gp","GP",f0],["cmp","CMP",f0],["att","ATT",f0],["cpct","CMP%",pct],["pyd","YDS",f0],["ptd","TD",f0],["pint","INT",f0],["rate","RATE",f1],["sk","SACKED",f0]]},
+    offense:{label:"Receiving & Rushing", show:a=>a.tgt||a.ra, sort:"cyd", cols:[["gp","GP",f0],["rec","REC",f0],["tgt","TGT",f0],["catch","CATCH%",pct],["cyd","REC YDS",f0],["ypr","Y/REC",f1],["ctd","REC TD",f0],["yac","YAC",f0],["drp","DROPS",f0],["ra","RUSH",f0],["ryd","RUSH YDS",f0],["rtd","RUSH TD",f0]]},
+    defense:{label:"Coverage", show:a=>a.tkl||a.ctg||a.int, sort:"int", cols:[["gp","GP",f0],["tkl","TKL",f0],["tfl","TFL",f0],["int","INT",f0],["pbu","PBU",f0],["ctg","TGT",f0],["ca","CMP ALW",f0],["caPct","CMP% ALW",pct],["ya","YDS ALW",f0],["ypt","YDS/TGT",f1],["tda","TD ALW",f0]]},
+    rush:{label:"Pass Rush", show:a=>a.pr||a.prs||a.sck, sort:"prs", cols:[["gp","GP",f0],["pr","RUSHES",f0],["prs","PRESSURES",f0],["prRate","PRS%",pct],["sck","SACKS",f0],["qbh","QB HITS",f0],["ff","FF",f0],["fr","FR",f0]]},
+    st:{label:"Special Teams", show:a=>a.fga||a.kr||a.pnt, sort:"fgm", cols:[["gp","GP",f0],["fgm","FG/XP MADE",f0],["fga","ATT",f0],["fgPct","PCT",pct],["kr","KR",f0],["kry","KR YDS",f0],["krtd","KR TD",f0],["pnt","PUNTS",f0],["in10","INSIDE 10",f0]]},
   };
   const LEADERS = [["pyd","Passing Yards"],["cyd","Receiving Yards"],["tds","Touchdowns Scored"],["int","Interceptions"],["tkl","Tackles"],["prs","QB Pressures"]];
-
-  function render(){
-    const t = totals(), players = Object.keys(t);
-    $("#sub").textContent = games.length ? `${games.length} game${games.length>1?"s":""} logged · ${players.length} Vikings on the stat sheet` : "No games logged yet";
-    const sum = k => players.reduce((s,u)=>s+(t[u][k]||0),0);
-    const tiles = [["Games", games.length],["Pass Yards", sum("pyd")],["Pass TDs", sum("ptd")],["Interceptions", sum("int")],["Tackles", sum("tkl")],["QB Pressures", sum("prs")]];
-    $("#strip").innerHTML = tiles.map(([l,v])=>`<div class="tile"><b class="num">${f0(v)}</b><span>${l}</span></div>`).join("");
-    $("#leaders").innerHTML = LEADERS.map(([k,l])=>{
-      const top = players.filter(u=>t[u][k]).sort((a,b)=>t[b][k]-t[a][k]).slice(0,3);
-      const rows = top.length ? top.map(u=>`<div class="lrow"><div class="jn">${esc(jn(u))||"–"}</div><div class="nm">${esc(nm(u))}</div><div class="v num">${f0(t[u][k])}</div></div>`).join("") : `<div class="muted">No stats yet</div>`;
-      return `<div class="lcard"><h3>${l}</h3>${rows}</div>`;
-    }).join("");
-    $("#tabs").innerHTML = Object.entries(TABLES).map(([k,v])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${v.label}</button>`).join("");
-    const T = TABLES[tab], sk = sortKey || T.sort;
-    const rows = players.filter(u=>T.show(t[u])).sort((a,b)=>(t[b][sk]??-1)-(t[a][sk]??-1));
-    $("#table").innerHTML = rows.length ? `<table><thead><tr><th data-k="name">Player</th>${T.cols.map(([k,l])=>`<th data-k="${k}" class="${k===sk?"sorted":""}">${l}</th>`).join("")}</tr></thead><tbody>${
-      rows.map(u=>`<tr><td><span class="jn">${esc(jn(u))}</span>${esc(nm(u))}</td>${T.cols.map(([k,,fm])=>`<td>${fm(t[u][k])}</td>`).join("")}</tr>`).join("")
-    }</tbody></table>` : `<div class="empty">No ${T.label.toLowerCase()} stats yet.</div>`;
-    $("#gcount").textContent = games.length ? `${games.length} logged` : "";
-    $("#games").innerHTML = games.length ? games.slice().reverse().map(g=>`<div class="game"><div class="ghead"><div><div class="gtitle">${esc(g.title)}</div><div class="gmeta">${esc(g.date||"")}</div></div></div><div class="chips">${g.vikings.map(u=>`<span class="chip">${esc(nm(u))}</span>`).join("")}</div></div>`).join("")
-      : `<div class="empty">No games yet.</div>`;
+  const scoreOf = g => { const s = g.score; if (!s || s.us == null || s.them == null || s.us === "" || s.them === "") return null; const us = +s.us, them = +s.them; return {us, them, r: us > them ? "W" : us < them ? "L" : "T"}; };
+  function record(){
+    let w=0,l=0,t=0,pf=0,pa=0,n=0;
+    for (const g of games){ const s = scoreOf(g); if (!s) continue; n++; pf+=s.us; pa+=s.them; if (s.r==="W") w++; else if (s.r==="L") l++; else t++; }
+    return {w,l,t,pf,pa,n};
   }
+  const leaderCard = (k,l) => {
+    const top = P.filter(u=>T[u][k]).sort((a,b)=>T[b][k]-T[a][k]).slice(0,3);
+    return `<div class="card"><h3>${l}</h3>${top.length ? top.map(u=>`<a class="lrow" href="#/player/${encodeURIComponent(u)}">${numDot(u)}<div class="nm">${esc(nm(u))}</div><div class="v num">${f0(T[u][k])}</div></a>`).join("") : `<div class="muted">No stats yet</div>`}</div>`;
+  };
+
+  function vOverview(){
+    const r = record(), sum = k => P.reduce((s,u)=>s+(T[u][k]||0),0);
+    const tiles = [];
+    if (r.n) tiles.push([`${r.w}-${r.l}${r.t?`-${r.t}`:""}`,"Record",""],[r.pf,"Points For","w"],[r.pa,"Points Against","l"],[(r.pf-r.pa>0?"+":"")+(r.pf-r.pa),"Point Diff",r.pf>=r.pa?"w":"l"]);
+    tiles.push([games.length,"Games",""],[f0(sum("pyd")),"Pass Yards",""],[sum("ptd"),"Pass TDs",""],[sum("int"),"Interceptions",""],[sum("tkl"),"Tackles",""],[sum("prs"),"QB Pressures",""]);
+    const last = games[games.length-1];
+    const top5 = P.slice(0,5);
+    return `<section class="strip" aria-label="Season totals">${tiles.map(([v,l,c])=>`<div class="tile ${c}"><b class="num">${v}</b><span>${l}</span></div>`).join("")}</section>
+      <div class="grid2">
+        <section class="panel"><div class="phead"><h2>Power Rankings</h2><a href="#/rankings">Full rankings →</a></div>
+          ${top5.map(u=>`<a class="lrow" href="#/player/${encodeURIComponent(u)}" style="grid-template-columns:28px 38px 1fr auto"><span class="muted num" style="font-family:var(--num);font-size:22px">${T[u].rank}</span>${numDot(u)}<div class="nm">${esc(nm(u))}</div>${ovrTag(u)}</a>`).join("") || `<div class="empty">No games yet.</div>`}
+        </section>
+        <section class="panel"><div class="phead"><h2>Latest Game</h2><a href="#/games">All games →</a></div>${last ? gameCard(last, false) : `<div class="empty">No games yet.</div>`}</section>
+      </div>
+      <section class="panel"><h2>Season Leaders</h2><div class="grid">${LEADERS.map(([k,l])=>leaderCard(k,l)).join("")}</div></section>
+      <section class="panel"><h2>Badges</h2><div class="note">Earned automatically from season stats. Tap a player for details.</div>
+        <div class="grid">${P.filter(u=>T[u].badges.length).map(u=>`<a class="card pcard" href="#/player/${encodeURIComponent(u)}" style="grid-template-columns:auto 1fr"><div class="bignum" style="font-size:34px">${esc(jn(u))}</div><div class="who"><div class="nm">${esc(nm(u))}</div><div class="badges" style="margin-top:6px">${badgeHTML(u)}</div></div></a>`).join("") || `<div class="empty">No badges yet.</div>`}</div>
+      </section>`;
+  }
+
+  function vRankings(){
+    const rows = P.map(u=>{ const a = T[u]; return `<tr><td>${plink(u, `<span class="n">${esc(jn(u))}</span>${esc(nm(u))}`)}</td><td>${a.rank}</td><td>${ovrTag(u)}</td><td>${grade(a.ovr)}</td><td>${a.gp}</td><td>${f1(a.ipg)}</td><td style="text-align:left"><div class="badges" style="flex-wrap:nowrap">${badgeHTML(u,3)}</div></td></tr>`; }).join("");
+    const cards = P.map(u=>{ const n = notes(T[u]); return `<div class="card"><a class="pcard" href="#/player/${encodeURIComponent(u)}"><div class="bignum" style="font-size:34px">${esc(jn(u))}</div><div class="who"><div class="nm">${esc(nm(u))}</div><small>${esc(positions(u).join(" · ") || "")}</small></div>${ovrTag(u)}</a>
+      ${n.bad.length ? fixList(n.bad.slice(0,3)) : fixList([{t:"No red flags", n:"Nothing stands out as a weakness. Keep it up."}], "good")}</div>`; }).join("");
+    return `<section class="panel"><h2>Power Rankings</h2>
+      <div class="note">OVR (overall) is based on impact per game — yards, TDs, catches, tackles, picks, pressures and sacks add points; INTs thrown, drops and yards allowed take them away. The best player per game sets the top of the scale at 99.</div>
+      <div class="tscroll">${P.length ? `<table class="wide"><thead><tr><th>Player</th><th>Rank</th><th>OVR</th><th>Grade</th><th>GP</th><th>Impact/G</th><th style="text-align:left">Badges</th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty">No games yet.</div>`}</div></section>
+      <section class="panel"><h2>Needs to Improve</h2><div class="note">Each player's biggest weak spots from the stats, worst first.</div><div class="grid">${cards || `<div class="empty">No games yet.</div>`}</div></section>`;
+  }
+
+  function vPlayers(){
+    const T2 = TABLES[tab], sk = sortKey || T2.sort;
+    const rows = P.filter(u=>T2.show(T[u])).sort((a,b)=>(T[b][sk]??-1)-(T[a][sk]??-1));
+    return `<section class="panel"><h2>Players</h2><div class="grid">${P.map(u=>`<a class="card pcard" href="#/player/${encodeURIComponent(u)}"><div class="bignum">${esc(jn(u))}</div><div class="who"><div class="nm">${esc(nm(u))}</div><small class="pos">${esc(positions(u).join(" · "))}</small><small>${T[u].gp} GP · ${esc(u)}</small></div>${ovrTag(u)}</a>`).join("") || `<div class="empty">No games yet.</div>`}</div></section>
+      <section class="panel"><div class="phead"><h2>Stat Tables</h2><div class="tabs" role="tablist">${Object.entries(TABLES).map(([k,v])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${v.label}</button>`).join("")}</div></div>
+        <div class="tscroll">${rows.length ? `<table class="wide"><thead><tr><th>Player</th>${T2.cols.map(([k,l])=>`<th data-k="${k}" class="${k===sk?"sorted":""}">${l}</th>`).join("")}</tr></thead><tbody>${rows.map(u=>`<tr><td>${plink(u, `<span class="n">${esc(jn(u))}</span>${esc(nm(u))}`)}</td>${T2.cols.map(([k,,fm])=>`<td>${fm(T[u][k])}</td>`).join("")}</tr>`).join("")}</tbody></table>` : `<div class="empty">No ${T2.label.toLowerCase()} stats yet.</div>`}</div>
+        <div class="note">Tap a column to sort.</div></section>`;
+  }
+
+  function vPlayer(u){
+    const a = T[u];
+    if (!a) return `<a class="back" href="#/players">← All players</a><div class="empty">No stats for this player yet.</div>`;
+    const n = notes(a);
+    const best = a.log.slice().sort((x,y)=>y.imp[u]-x.imp[u])[0];
+    const groups = [
+      ["Passing", a.att, [["CMP/ATT",`${a.cmp||0}/${a.att}`],["CMP%",pct(a.cpct)],["Yards",f0(a.pyd)],["TD",f0(a.ptd)],["INT",f0(a.pint)],["Rating",f1(a.rate)]]],
+      ["Receiving", a.tgt || a.rec, [["Catches",f0(a.rec)],["Targets",f0(a.tgt)],["Catch%",pct(a.catch)],["Yards",f0(a.cyd)],["Y/Rec",f1(a.ypr)],["TD",f0(a.ctd)],["YAC",f0(a.yac)],["Drops",f0(a.drp)]]],
+      ["Rushing", a.ra, [["Carries",f0(a.ra)],["Yards",f0(a.ryd)],["TD",f0(a.rtd)]]],
+      ["Coverage", a.tkl || a.ctg || a.int, [["Tackles",f0(a.tkl)],["INT",f0(a.int)],["PBU",f0(a.pbu)],["Targeted",f0(a.ctg)],["CMP% Allowed",pct(a.caPct)],["Yds/Target",f1(a.ypt)],["TD Allowed",f0(a.tda)]]],
+      ["Pass Rush", a.pr || a.prs, [["Rushes",f0(a.pr)],["Pressures",f0(a.prs)],["Pressure%",pct(a.prRate)],["Sacks",f0(a.sck)],["QB Hits",f0(a.qbh)]]],
+      ["Special Teams", a.fga || a.kr || a.pnt, [["FG/XP",`${a.fgm||0}/${a.fga||0}`],["Kick Returns",f0(a.kr)],["KR Yards",f0(a.kry)],["Punts",f0(a.pnt)]]],
+    ].filter(g=>g[1]);
+    return `<a class="back" href="#/players">← All players</a>
+      <section class="panel"><div class="prof"><div class="bignum">${esc(jn(u)) || "–"}</div><div><h2>${esc(nm(u))}</h2><div class="note">${esc(u)}</div>
+        <div class="meta">${ovrTag(u)}<span class="muted">Rank #${a.rank} of ${P.length} · ${a.gp} GP · ${f1(a.ipg)} impact/game</span></div>
+        ${positions(u).length ? `<div class="meta"><span class="pos">${esc(positions(u).join(" · "))}</span></div>` : ""}
+        <div class="badges" style="margin-top:8px">${badgeHTML(u)}</div></div></div></section>
+      <div class="grid2">
+        <section class="panel"><h2>Strengths</h2>${n.good.length ? fixList(n.good.slice(0,4), "good") : `<div class="muted">Nothing stands out yet.</div>`}</section>
+        <section class="panel"><h2>Needs to Improve</h2>${n.bad.length ? fixList(n.bad.slice(0,4)) : fixList([{t:"No red flags", n:"Keep doing what you're doing."}], "good")}</section>
+      </div>
+      <section class="panel"><h2>Season Stats</h2>${groups.map(([t,,kv])=>`<h3>${t}</h3><div class="kv">${kv.map(([k,v])=>`<div><b>${v}</b><span>${k}</span></div>`).join("")}</div>`).join("")}</section>
+      <section class="panel"><h2>Game by Game</h2>
+        ${best ? `<div class="pog"><span class="lbl">BEST GAME</span><span><b>${esc(best.title)}</b> <span class="muted">— ${esc(statline(best.players[u]))}</span></span></div>` : ""}
+        <div class="tscroll"><table><thead><tr><th>Game</th><th>Result</th><th>Impact</th><th style="text-align:left">Stat line</th></tr></thead><tbody>${a.log.slice().reverse().map(g=>{ const s = scoreOf(g); return `<tr><td><a href="#/games">${esc(g.title)}</a> <span class="muted">${esc(g.date)}</span></td><td>${s ? `<span class="res ${s.r}" style="font-size:18px">${s.r}</span> ${s.us}-${s.them}` : "–"}</td><td>${f1(g.imp[u])}</td><td style="text-align:left;white-space:normal">${esc(statline(g.players[u]))}${g.pog===u?` <span class="badge">Player of the game</span>`:""}</td></tr>`; }).join("")}</tbody></table></div></section>`;
+  }
+
+  function gameCard(g, full=true){
+    const s = scoreOf(g);
+    const lead = (k, lbl) => { const u = g.vikings.filter(u=>g.players[u]?.[k]).sort((a,b)=>g.players[b][k]-g.players[a][k])[0]; return u ? `<div>${lbl}: <b>${esc(nm(u))}</b> — ${esc(statline({[k]:1, ...pick(g.players[u], k)}))}</div>` : ""; };
+    return `<div class="game"><div class="ghead"><div><div class="gtitle">${esc(g.title)}</div><div class="gmeta">${esc(g.date)} · ${g.vikings.length} Vikings</div></div>
+      ${s ? `<div class="res ${s.r}">${s.r} ${s.us}–${s.them}</div>` : `<div class="muted" style="font-size:13px">No score entered</div>`}</div>
+      ${g.pog ? `<a class="pog" href="#/player/${encodeURIComponent(g.pog)}" style="text-decoration:none">${numDot(g.pog)}<div><div class="lbl">PLAYER OF THE GAME</div><b>${esc(nm(g.pog))}</b> <span class="muted">— ${esc(statline(g.players[g.pog]))}</span></div></a>` : ""}
+      <div class="perf">${lead("pyd","Passing")}${lead("cyd","Receiving")}${lead("ryd","Rushing")}${lead("int","Picks")}${lead("tkl","Tackles")}${lead("prs","Pass rush")}</div>
+      ${full ? `<details><summary>Box score</summary><div class="tscroll"><table><thead><tr><th>Player</th><th>Impact</th><th style="text-align:left">Stat line</th></tr></thead><tbody>${g.vikings.slice().sort((a,b)=>(g.imp[b]||0)-(g.imp[a]||0)).map(u=>`<tr><td>${plink(u, `<span class="n">${esc(jn(u))}</span>${esc(nm(u))}`)}</td><td>${f1(g.imp[u])}</td><td style="text-align:left;white-space:normal">${esc(statline(g.players[u]))}</td></tr>`).join("")}</tbody></table></div></details>` : ""}
+    </div>`;
+  }
+  function pick(s, k){
+    const groups = {pyd:["cmp","att","pyd","ptd","pint"], cyd:["rec","tgt","cyd","ctd"], ryd:["ra","ryd","rtd"], int:["int","pbu","tkl"], tkl:["tkl","int","pbu"], prs:["prs","sck"]};
+    const o = {}; for (const x of groups[k]||[k]) if (s[x]) o[x] = s[x]; if (!o.att && k==="pyd") o.att = s.att; return o;
+  }
+
+  function vGames(){
+    const recs = [["pyd","Passing yards"],["ptd","Passing TDs"],["cyd","Receiving yards"],["rec","Catches"],["ctd","Receiving TDs"],["int","Interceptions"],["tkl","Tackles"],["prs","QB pressures"],["sck","Sacks"]];
+    const rows = recs.map(([k,l])=>{ let best = null; for (const g of games) for (const u of g.vikings){ const v = g.players[u]?.[k]||0; if (v && (!best || v > best.v)) best = {v,u,g}; } return best ? `<tr><td>${l}</td><td>${best.v}</td><td style="text-align:left">${plink(best.u, esc(nm(best.u)))}</td><td style="text-align:left" class="muted">${esc(best.g.title)}</td></tr>` : ""; }).join("");
+    let bi = null; for (const g of games) for (const u of g.vikings){ if (!bi || g.imp[u] > bi.v) bi = {v:g.imp[u], u, g}; }
+    const r = record();
+    return `<section class="panel"><div class="phead"><h2>Games <small>${games.length} logged</small></h2>${r.n ? `<span class="record">${r.w}-${r.l}${r.t?`-${r.t}`:""}</span>` : ""}</div>
+      <div class="games" style="display:flex;flex-direction:column;gap:12px">${games.slice().reverse().map(g=>gameCard(g)).join("") || `<div class="empty">No games yet.</div>`}</div></section>
+      <section class="panel"><h2>Single-Game Records</h2><div class="tscroll"><table><thead><tr><th>Record</th><th>Value</th><th style="text-align:left">Player</th><th style="text-align:left">Game</th></tr></thead><tbody>${rows}
+      ${bi ? `<tr><td>Best all-around game</td><td>${f1(bi.v)}</td><td style="text-align:left">${plink(bi.u, esc(nm(bi.u)))}</td><td style="text-align:left" class="muted">${esc(bi.g.title)}</td></tr>` : ""}</tbody></table></div></section>`;
+  }
+
+  let cmpA = null, cmpB = null;
+  function vCompare(){
+    if (!P.length) return `<section class="panel"><h2>Compare</h2><div class="empty">No games yet.</div></section>`;
+    if (!T[cmpA]) cmpA = P[0]; if (!T[cmpB] || cmpB === cmpA) cmpB = P.find(u=>u!==cmpA) || cmpA;
+    const opts = sel => P.map(u=>`<option value="${esc(u)}" ${u===sel?"selected":""}>#${esc(jn(u))} ${esc(nm(u))}</option>`).join("");
+    const a = T[cmpA], b = T[cmpB];
+    const S = [["OVR","ovr",f0],["Impact / game","ipg",f1],["Games","gp",f0],["Pass yards","pyd",f0],["Pass TDs","ptd",f0],["INTs thrown","pint",f0,1],["Passer rating","rate",f1],["Catches","rec",f0],["Rec yards","cyd",f0],["Rec TDs","ctd",f0],["Catch %","catch",pct],["Drops","drp",f0,1],["Rush yards","ryd",f0],["Tackles","tkl",f0],["Picks","int",f0],["Pass breakups","pbu",f0],["Yds/target allowed","ypt",f1,1],["Pressures","prs",f0],["Sacks","sck",f0],["KR yards","kry",f0]];
+    const rows = S.filter(([,k])=>a[k]!=null&&a[k]!==0||b[k]!=null&&b[k]!==0).map(([l,k,fm,low])=>{
+      const x = a[k] ?? null, y = b[k] ?? null, mx = Math.max(Math.abs(x||0), Math.abs(y||0)) || 1;
+      let wa = false, wb = false; if (x != null && y != null && x !== y){ const aw = low ? x < y : x > y; wa = aw; wb = !aw; } else if (x != null && y == null) wa = !low; else if (y != null && x == null) wb = !low;
+      return `<div class="crow"><div class="side l ${wa?"win":""}"><div class="bar"><i style="width:${Math.abs(x||0)/mx*100}%"></i></div>${fm(x)}</div><div class="lab">${l}</div><div class="side ${wb?"win":""}">${fm(y)}<div class="bar"><i style="width:${Math.abs(y||0)/mx*100}%"></i></div></div></div>`;
+    }).join("");
+    return `<section class="panel"><h2>Head to Head</h2>
+      <div class="grid2" style="gap:10px"><select class="sel" id="ca" aria-label="Player 1">${opts(cmpA)}</select><select class="sel" id="cb" aria-label="Player 2">${opts(cmpB)}</select></div>
+      <div class="crow" style="border:0"><div class="side l" style="font-size:26px">${esc(nm(cmpA))} ${ovrTag(cmpA)}</div><div class="lab">vs</div><div class="side" style="font-size:26px">${ovrTag(cmpB)} ${esc(nm(cmpB))}</div></div>
+      <div class="cmp">${rows}</div><div class="note">Gold = better. For INTs thrown, drops and yards allowed, lower is better.</div></section>`;
+  }
+
+  function vDepth(){
+    const d = depth(), keys = Object.keys(d).filter(k => (d[k]||[]).length);
+    if (!keys.length) return `<section class="panel"><h2>Depth Chart</h2><div class="empty">No depth chart set yet. Add one in the admin page.</div></section>`;
+    return `<section class="panel"><h2>Depth Chart</h2><div class="depth">${keys.map(pos=>`<div class="card"><h3>${esc(pos)}</h3>${d[pos].map((u,i)=>`<a class="slot" href="#/player/${encodeURIComponent(u)}"><span class="ord">${i===0?"START":i+1}</span>${numDot(u)}<span class="nm" style="flex:1">${esc(nm(u))}</span>${ovrTag(u)}</a>`).join("")}</div>`).join("")}</div></section>`;
+  }
+
+  // ---------- router ----------
+  function render(){
+    const r = record();
+    $("#record").textContent = r.n ? `${r.w}-${r.l}${r.t?`-${r.t}`:""}` : "";
+    $("#sub").textContent = !loaded ? "Loading season…" : games.length ? `${games.length} game${games.length>1?"s":""} logged · ${P.length} Vikings on the stat sheet` : "No games logged yet";
+    const h = location.hash.replace(/^#\/?/,""), [route, arg] = h.split("/");
+    const key = route || "";
+    document.querySelectorAll("nav.nav a").forEach(a => { const k = a.getAttribute("href").replace(/^#\/?/,""); a.toggleAttribute("aria-current", k === key || (key === "player" && k === "players")); if (a.hasAttribute("aria-current")) a.setAttribute("aria-current","page"); });
+    if (!loaded){ $("#view").innerHTML = ""; return; }
+    const v = {"":vOverview, rankings:vRankings, players:vPlayers, games:vGames, compare:vCompare, depth:vDepth}[key];
+    $("#view").innerHTML = key === "player" ? vPlayer(decodeURIComponent(arg||"")) : (v || vOverview)();
+  }
+  window.addEventListener("hashchange", () => { render(); window.scrollTo({top:0}); });
   document.addEventListener("click", e => {
     const b = e.target.closest("button[data-tab]"); if (b){ tab=b.dataset.tab; sortKey=null; render(); return; }
-    const th = e.target.closest("#table th[data-k]"); if (th && th.dataset.k!=="name"){ sortKey=th.dataset.k; render(); }
+    const th = e.target.closest("th[data-k]"); if (th){ sortKey=th.dataset.k; render(); }
   });
+  document.addEventListener("change", e => { if (e.target.id === "ca") { cmpA = e.target.value; render(); } if (e.target.id === "cb") { cmpB = e.target.value; render(); } });
 
-  // ---------- load: config.json + every CSV in /games ----------
-  async function listFiles(cfg){
+  // ---------- load ----------
+  async function listFiles(c){
     const h = location.hostname, parts = location.pathname.split("/").filter(Boolean);
     if (h.endsWith(".github.io")){
       const owner = h.split(".")[0], repo = parts[0] || h;
-      try{
-        const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/games`, {cache:"no-store"});
-        if (r.ok) return (await r.json()).filter(f=>/\.csv$/i.test(f.name)).map(f=>f.name);
-      }catch{}
+      try{ const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/games`, {cache:"no-store"}); if (r.ok) return (await r.json()).filter(f=>/\.csv$/i.test(f.name)).map(f=>f.name); }catch{}
     }
-    return cfg.files || Object.keys(cfg.games||{});
+    return c.files || Object.keys(c.games||{});
   }
-  function meta(file){
-    const base = file.replace(/\.csv$/i,"");
-    const m = base.match(/^(\d{4}-\d{2}-\d{2})\s*(.*)$/);
-    return m ? {date:m[1], title:m[2]||"Game"} : {date:"", title:base};
-  }
+  function meta(file){ const base = file.replace(/\.csv$/i,""); const m = base.match(/^(\d{4}-\d{2}-\d{2})\s*(.*)$/); return m ? {date:m[1], title:m[2]||"Game"} : {date:"", title:base}; }
   (async () => {
     try{
-      const cfg = await (await fetch("config.json", {cache:"no-store"})).json();
+      cfg = await (await fetch("config.json", {cache:"no-store"})).json();
       roster = Object.fromEntries(Object.entries(cfg.roster || {}).map(([k,v]) => [k.toLowerCase(), v]));
       const files = (await listFiles(cfg)).sort();
-      const loaded = await Promise.all(files.map(async f => {
-        const r = await fetch("games/" + encodeURIComponent(f), {cache:"no-store"});
-        if (!r.ok) return null;
+      const all = await Promise.all(files.map(async f => {
+        const r = await fetch("games/" + encodeURIComponent(f), {cache:"no-store"}); if (!r.ok) return null;
         const players = parseCSV(await r.text()), o = (cfg.games||{})[f] || {}, not = new Set(o.notVikings||[]);
         const vikings = Object.keys(players).filter(u => (R(u) && !not.has(u)) || (o.alsoVikings||[]).includes(u));
-        return {...meta(f), ...(o.title?{title:o.title}:{}), players, vikings};
+        return {file:f, ...meta(f), ...(o.title?{title:o.title}:{}), score:o.score, players, vikings};
       }));
-      games = loaded.filter(Boolean);
-      render();
-    }catch(e){
-      $("#sub").textContent = "Couldn't load the stats. Refresh the page to try again.";
-    }
+      games = all.filter(Boolean); loaded = true; build(); render();
+    }catch(e){ loaded = true; $("#sub").textContent = "Couldn't load the stats. Refresh the page to try again."; }
   })();
   render();
 })();
