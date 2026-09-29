@@ -184,7 +184,7 @@ input,select,textarea{font:inherit;font-size:16px;font-weight:600;color:var(--fg
     const k = rosterKey(u) || u, r = cfg.roster[k] || {}, c = CLASSIC[lc(u)] || {};
     const RATE = ["rate","cpct","catch","ypr","ypt"];
     const sorted = statOptions(u).filter(o=>o.k!=="gp").sort((x,y)=>y.share-x.share);
-    const opts = sorted.filter(o=>o.share >= .3).concat(sorted.filter(o=>o.share < .3 && !RATE.includes(o.k))).slice(0,4);
+    const opts = sorted.filter(o=>o.share >= (o.k==="ypt"?.8:.3)).concat(sorted.filter(o=>o.share < .3 && !RATE.includes(o.k))).slice(0,4);
     while (opts.length < 4) opts.push({k:"", value:"", label:""});
     const a = T[lc(u)];
     return {nick:(r.name||u).toUpperCase(), num:String(r.number ?? ""), pos:positions(u), tag:c.tag || "",
