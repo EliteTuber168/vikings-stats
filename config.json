@@ -38,7 +38,11 @@
     "2026-09-27 vs Saints.csv": {
       "notVikings": [
         "Stealabrainrot57528"
-      ]
+      ],
+      "score": {
+        "us": 28,
+        "them": 21
+      }
     },
     "2026-09-28 Scrimmage Colts.csv": {
       "score": {
