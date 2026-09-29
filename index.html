@@ -192,7 +192,7 @@ footer a{color:var(--mute)}
     a.catch = a.tgt ? a.rec/a.tgt : null;
     a.ypt = a.ctg ? (a.ya||0)/a.ctg : null;
     a.caPct = a.ctg ? (a.ca||0)/a.ctg : null;
-    a.prRate = a.pr ? (a.prs||0)/a.pr : null;
+    a.ppg = a.gp ? (a.prs||0)/a.gp : null;
     a.fgPct = a.fga ? a.fgm/a.fga : null;
     a.tds = (a.ctd||0)+(a.rtd||0)+(a.itd||0)+(a.krtd||0);
     a.imp = impact(a); a.ipg = a.gp ? a.imp/a.gp : 0;
@@ -297,9 +297,9 @@ footer a{color:var(--mute)}
     }
     if (a.int >= 2) G(a.int, "Ball hawk", `${a.int} interceptions${a.pbu?` and ${a.pbu} pass breakups`:""}.`);
     if (a.pr >= 5){
-      if (a.prRate < .25) B((.25-a.prRate)*8, "Pass-rush win rate", `${a.prs||0} pressures on ${a.pr} rushes. Work on your moves off the line.`);
+      if (a.pr >= 10 && a.ppg < 2) B(.6, "Pass-rush pressure", `${a.prs||0} pressures in ${a.gp} game${a.gp>1?"s":""}. Work on your moves off the line.`);
       if (!a.sck && a.pr >= 10) B(.8, "Finishing sacks", `No sacks on ${a.pr} rushes. Finish the play when you get home.`);
-      if (a.prRate >= .4) G(a.prRate*3, "Disruptor", `Pressures the QB on ${pct(a.prRate)} of rushes.`);
+      if (a.ppg >= 4) G(a.ppg/2, "Disruptor", `${f1(a.ppg)} QB pressures per game.`);
     }
     if ((a.ctg||0) + (a.pr||0) >= 5 && (a.tkl||0)/a.gp < 1.5) B(.6, "Tackling", `${a.tkl||0} tackles in ${a.gp} game${a.gp>1?"s":""}. Rally to the ball and finish plays.`);
     if (a.tkl/a.gp >= 4) G(a.tkl/a.gp/2, "Tackle machine", `${f1(a.tkl/a.gp)} tackles per game.`);
@@ -323,7 +323,7 @@ footer a{color:var(--mute)}
     passing:{label:"Passing", show:a=>a.att, sort:"pyd", cols:[["gp","GP",f0],["cmp","CMP",f0],["att","ATT",f0],["cpct","CMP%",pct],["pyd","YDS",f0],["ptd","TD",f0],["pint","INT",f0],["rate","RATE",f1],["sk","SACKED",f0]]},
     offense:{label:"Receiving & Rushing", show:a=>a.tgt||a.ra, sort:"cyd", cols:[["gp","GP",f0],["rec","REC",f0],["tgt","TGT",f0],["catch","CATCH%",pct],["cyd","REC YDS",f0],["ypr","Y/REC",f1],["ctd","REC TD",f0],["yac","YAC",f0],["drp","DROPS",f0],["ra","RUSH",f0],["ryd","RUSH YDS",f0],["rtd","RUSH TD",f0]]},
     defense:{label:"Coverage", show:a=>a.tkl||a.ctg||a.int, sort:"int", cols:[["gp","GP",f0],["tkl","TKL",f0],["tfl","TFL",f0],["int","INT",f0],["pbu","PBU",f0],["ctg","TGT",f0],["ca","CMP ALW",f0],["caPct","CMP% ALW",pct],["ya","YDS ALW",f0],["ypt","YDS/TGT",f1],["tda","TD ALW",f0]]},
-    rush:{label:"Pass Rush", show:a=>a.pr||a.prs||a.sck, sort:"prs", cols:[["gp","GP",f0],["pr","RUSHES",f0],["prs","PRESSURES",f0],["prRate","PRS%",pct],["sck","SACKS",f0],["qbh","QB HITS",f0],["ff","FF",f0],["fr","FR",f0]]},
+    rush:{label:"Pass Rush", show:a=>a.pr||a.prs||a.sck, sort:"prs", cols:[["gp","GP",f0],["pr","RUSHES",f0],["prs","PRESSURES",f0],["ppg","PRS/G",f1],["sck","SACKS",f0],["qbh","QB HITS",f0],["ff","FF",f0],["fr","FR",f0]]},
     st:{label:"Special Teams", show:a=>a.fga||a.kr||a.pnt, sort:"fgm", cols:[["gp","GP",f0],["fgm","FG/XP MADE",f0],["fga","ATT",f0],["fgPct","PCT",pct],["kr","KR",f0],["kry","KR YDS",f0],["krtd","KR TD",f0],["pnt","PUNTS",f0],["in10","INSIDE 10",f0]]},
   };
   const LEADERS = [["pyd","Passing Yards"],["cyd","Receiving Yards"],["tds","Touchdowns Scored"],["int","Interceptions"],["tkl","Tackles"],["prs","QB Pressures"]];
@@ -387,7 +387,7 @@ footer a{color:var(--mute)}
       ["Receiving", a.tgt || a.rec, [["Catches",f0(a.rec)],["Targets",f0(a.tgt)],["Catch%",pct(a.catch)],["Yards",f0(a.cyd)],["Y/Rec",f1(a.ypr)],["TD",f0(a.ctd)],["YAC",f0(a.yac)],["Drops",f0(a.drp)]]],
       ["Rushing", a.ra, [["Carries",f0(a.ra)],["Yards",f0(a.ryd)],["TD",f0(a.rtd)]]],
       ["Coverage", a.tkl || a.ctg || a.int, [["Tackles",f0(a.tkl)],["INT",f0(a.int)],["PBU",f0(a.pbu)],["Targeted",f0(a.ctg)],["CMP% Allowed",pct(a.caPct)],["Yds/Target",f1(a.ypt)],["TD Allowed",f0(a.tda)]]],
-      ["Pass Rush", a.pr || a.prs, [["Rushes",f0(a.pr)],["Pressures",f0(a.prs)],["Pressure%",pct(a.prRate)],["Sacks",f0(a.sck)],["QB Hits",f0(a.qbh)]]],
+      ["Pass Rush", a.pr || a.prs, [["Rushes",f0(a.pr)],["Pressures",f0(a.prs)],["Pressures/G",f1(a.ppg)],["Sacks",f0(a.sck)],["QB Hits",f0(a.qbh)]]],
       ["Special Teams", a.fga || a.kr || a.pnt, [["FG/XP",`${a.fgm||0}/${a.fga||0}`],["Kick Returns",f0(a.kr)],["KR Yards",f0(a.kry)],["Punts",f0(a.pnt)]]],
     ].filter(g=>g[1]);
     return `<a class="back" href="#/players">← All players</a>
