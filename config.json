@@ -52,6 +52,12 @@
       "notVikings": [
         "LT_isawesome"
       ]
+    },
+    "2026-09-24 Game 2.csv": {
+      "score": {
+        "us": 1,
+        "them": 0
+      }
     }
   },
   "_help": "Roster players in a game's CSV count as Vikings automatically. For a game where a roster player was on the OTHER team, list their username under notVikings for that file. To count a non-roster player, list them under alsoVikings.",
