@@ -107,12 +107,13 @@ a{color:var(--gold)}
 .drow select{font:inherit;font-size:15px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;max-width:170px}
 .drow .pos{font:inherit;font-size:16px;font-weight:700;color:var(--gold);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;width:100%}
 .mini{padding:6px 10px;font-size:13px}
+textarea{font:inherit;font-size:16px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;resize:vertical;text-transform:none;letter-spacing:0}
 </style></head><body>
 <div class="wrap">
   <header>
     <div class="eyebrow">Vikings Stat Book</div>
     <h1>ADMIN <span>PANEL</span></h1>
-    <div class="sub"><a href="./">← Back to the stat book</a></div>
+    <div class="sub"><a href="./">← Back to the stat book</a> · <a href="posters.html">Poster maker →</a></div>
   </header>
 
   <!-- sign in -->
@@ -163,6 +164,7 @@ a{color:var(--gold)}
           <label class="f">Vikings score<input type="number" min="0" id="gus" placeholder="optional"></label>
           <label class="f">Opponent score<input type="number" min="0" id="gthem" placeholder="optional"></label>
         </div>
+        <label class="f">Game note (optional)<textarea id="gnote" rows="2" maxlength="300" placeholder="e.g. Dart threw 5 TDs"></textarea></label>
         <div class="note">Tick everyone who played <b>for the Vikings</b> this game. Roster players are ticked automatically — untick anyone who was on the other team.</div>
         <div class="checks" id="gchecks"></div>
         <div class="row"><button class="btn gold" id="saveg">Add game</button><button class="btn" id="cancelg">Cancel</button><span class="msg" id="nmsg"></span></div>
@@ -290,7 +292,7 @@ a{color:var(--gold)}
     if (!players.length){ msg($("#nmsg"), "That file doesn't look like a UF stats CSV.", false); $("#newg").classList.remove("hide"); return; }
     pending = {text, players};
     $("#gdate").value = new Date().toLocaleDateString("en-CA");
-    $("#gtitle").value = ""; $("#gus").value = ""; $("#gthem").value = "";
+    $("#gtitle").value = ""; $("#gus").value = ""; $("#gthem").value = ""; $("#gnote").value = "";
     $("#gchecks").innerHTML = players.sort((a,b)=>(!!rosterKey(b))-(!!rosterKey(a)) || a.localeCompare(b)).map(u=>{
       const on = !!rosterKey(u);
       return `<label class="${on?"on":""}"><input type="checkbox" value="${esc(u)}" ${on?"checked":""}><span>${esc(label(u))}</span></label>`;
@@ -315,6 +317,7 @@ a{color:var(--gold)}
       await loadCfg(); setVikings(name, pending.players, ticked);
       const us = $("#gus").value, them = $("#gthem").value;
       if (us !== "" && them !== "") cfg.games[name] = {...(cfg.games[name]||{}), score:{us:+us, them:+them}};
+      const note = $("#gnote").value.trim(); if (note) cfg.games[name] = {...(cfg.games[name]||{}), note};
       if (cfg.games[name]) await saveCfg(`Set details for ${title}`);
       games.unshift({name, players:pending.players, sha:null});
       await refreshGames();
@@ -358,10 +361,12 @@ a{color:var(--gold)}
       return `<div class="game" data-g="${gi}">
         <div class="ghead"><div><div class="gtitle">${esc(o.title || mt.title)}</div><div class="gmeta">${esc(mt.date)} · ${vik.length} Vikings${o.score ? ` · <b style="color:${o.score.us>o.score.them?"var(--good)":o.score.us<o.score.them?"var(--bad)":"var(--mute)"}">${o.score.us>o.score.them?"W":o.score.us<o.score.them?"L":"T"} ${esc(o.score.us)}–${esc(o.score.them)}</b>` : " · no score"}</div></div>
           <div class="row"><button class="btn" data-act="edit">Edit</button><button class="btn danger" data-act="del">Delete</button></div></div>
+        ${o.note ? `<div class="note" style="font-style:italic">“${esc(o.note)}”</div>` : ""}
         <div class="chips">${vik.map(u=>`<span class="chip">${esc(rosterKey(u) ? cfg.roster[rosterKey(u)].name : u)}</span>`).join("") || '<span class="muted">No Vikings ticked</span>'}</div>
         <div class="ged hide" style="display:flex;flex-direction:column;gap:10px">
           <label class="f">Title shown on the site<input type="text" data-f="title" value="${esc(o.title || mt.title)}"></label>
           <div class="row"><label class="f">Vikings score<input type="number" min="0" data-f="us" value="${esc(o.score?.us ?? "")}"></label><label class="f">Opponent score<input type="number" min="0" data-f="them" value="${esc(o.score?.them ?? "")}"></label></div>
+          <label class="f">Game note<textarea data-f="note" rows="2" maxlength="300">${esc(o.note || "")}</textarea></label>
           <div class="checks">${g.players.slice().sort((a,b)=>(!!rosterKey(b))-(!!rosterKey(a)) || a.localeCompare(b)).map(u=>{ const on = isViking(g.name,u); return `<label class="${on?"on":""}"><input type="checkbox" value="${esc(u)}" ${on?"checked":""}><span>${esc(label(u))}</span></label>`; }).join("")}</div>
           <div class="row"><button class="btn primary" data-act="save">Save game</button><button class="btn" data-act="close">Close</button><span class="msg"></span></div>
         </div></div>`;
@@ -382,6 +387,7 @@ a{color:var(--gold)}
         setVikings(g.name, g.players, ticked);
         const us = ed.querySelector("[data-f=us]").value, them = ed.querySelector("[data-f=them]").value;
         if (us !== "" && them !== "") (cfg.games[g.name] ||= {}).score = {us:+us, them:+them}; else if (cfg.games[g.name]){ delete cfg.games[g.name].score; if (!Object.keys(cfg.games[g.name]).length) delete cfg.games[g.name]; }
+        const note = ed.querySelector("[data-f=note]").value.trim(); if (note) (cfg.games[g.name] ||= {}).note = note; else if (cfg.games[g.name]){ delete cfg.games[g.name].note; if (!Object.keys(cfg.games[g.name]).length) delete cfg.games[g.name]; }
         const t = ed.querySelector("[data-f=title]").value.trim(), dflt = meta(g.name).title;
         if (t && t !== dflt) (cfg.games[g.name] ||= {}).title = t; else if (cfg.games[g.name]){ delete cfg.games[g.name].title; if (!Object.keys(cfg.games[g.name]).length) delete cfg.games[g.name]; }
         await saveCfg(`Edit game: ${t || dflt}`);

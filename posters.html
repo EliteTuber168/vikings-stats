@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vikings Poster Maker</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Permanent+Marker&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}
+/* Poster maker: form on the left, live canvas preview on the right (stacks on phones). Dark only, matches the stat book. */
+:root{--bg:#0c0717;--panel:#160e28;--panel2:#1e1436;--line:#33255a;--fg:#efeaf8;--mute:#a99ec6;--accent:#9b5cff;--accent2:#6f33e0;--gold:#ffc62f;--good:#5fd38a;--bad:#ff6b7a;
+  --display:"Permanent Marker",cursive;--num:"Bebas Neue",Impact,sans-serif;--body:"Rajdhani",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;font-weight:500;line-height:1.4}
+a{color:var(--gold)}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 64px;display:flex;flex-direction:column;gap:20px}
+header{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.eyebrow{font-size:13px;letter-spacing:.42em;color:var(--gold);font-weight:700}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(38px,6vw,64px);line-height:1;transform:rotate(-2deg);text-shadow:0 4px 0 var(--accent2)}
+h1 span{color:var(--accent)}
+h2{margin:0;font-family:var(--num);font-weight:400;font-size:26px;letter-spacing:.08em}
+.links{display:flex;gap:16px;font-size:14px;font-weight:700;letter-spacing:.08em}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:1fr}.preview{position:static!important}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.preview{position:sticky;top:12px}
+canvas{width:100%;height:auto;border-radius:12px;display:block;background:#07030e;border:1px solid var(--line)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:700;text-transform:uppercase;min-width:0;flex:1 1 140px}
+input,select,textarea{font:inherit;font-size:16px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.slot{display:grid;grid-template-columns:minmax(0,1.3fr) 90px minmax(0,1fr);gap:6px;align-items:center}
+.pslot{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:6px}
+@media (max-width:520px){.slot{grid-template-columns:1fr 80px}.slot select{grid-column:1/-1}.pslot{grid-template-columns:1fr}}
+.btn{font:inherit;font-weight:700;letter-spacing:.08em;font-size:14px;border-radius:10px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--fg)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#140a26}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:14px;color:var(--mute)}
+.msg{font-size:14px;font-weight:700}.msg.ok{color:var(--good)}.msg.err{color:var(--bad)}
+.sec{font-size:13px;letter-spacing:.2em;color:var(--gold);font-weight:700;text-transform:uppercase;margin-top:6px}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">VIKINGS ADMIN</div>
+    <h1>POSTER <span>MAKER</span></h1>
+    <div class="links"><a href="admin.html">← Admin</a><a href="./">Stat book</a></div>
+  </header>
+  <div class="layout">
+    <div class="panel">
+      <div class="row">
+        <label class="f" style="flex:2 1 220px">Player<select id="player"></select></label>
+        <button class="btn" id="auto" title="Refill everything from current stats">Reset to auto</button>
+      </div>
+      <div class="sec">Header</div>
+      <div class="row">
+        <label class="f" style="flex:2 1 200px">Big name<input id="nick"></label>
+        <label class="f" style="flex:0 1 90px">Number<input id="num"></label>
+      </div>
+      <div class="row">
+        <label class="f" style="flex:2 1 200px">Positions (top line)<input id="pos"></label>
+        <label class="f">Tag (next to number)<input id="tag" list="tagopts"></label>
+      </div>
+      <datalist id="tagopts"></datalist>
+      <div class="sec">Stat boxes</div>
+      <div class="note">Pick a stat to auto-fill it, or type your own value and label.</div>
+      <div id="stats" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="sec">Bottom highlights</div>
+      <div id="pills" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="sec">Extras</div>
+      <div class="row">
+        <label class="f">Stamp<input id="stamp" list="stampopts" placeholder="none"></label>
+        <label class="f">Footer<input id="foot"></label>
+      </div>
+      <datalist id="stampopts"><option value="ON PROBATION"><option value="TEAM MVP"><option value="CAPTAIN"><option value="ROOKIE"><option value="NEW SIGNING"><option value="PLAYER OF THE GAME"><option value="ON FIRE"><option value="INJURED"><option value="TRADE BLOCK"><option value="SUSPENDED"></datalist>
+      <div class="row">
+        <label class="f" style="flex:2 1 200px">Background art<select id="art"></select></label>
+        <label class="btn" style="display:inline-flex;align-items:center" title="Adds images to the site so they show up in this list">Upload art<input type="file" id="artfile" accept="image/*" multiple hidden></label>
+      </div>
+      <div class="note" id="artnote"></div>
+      <div class="row"><button class="btn primary" id="save">Save as this player's default</button><span class="msg" id="smsg"></span></div>
+      <div class="note">Saving and uploading use the same sign-in as the admin page. Editing, downloading and copying work for anyone.</div>
+    </div>
+    <div class="panel preview">
+      <canvas id="cv" width="1024" height="1536" aria-label="Poster preview"></canvas>
+      <div class="row"><button class="btn gold" id="dl">Download PNG</button><button class="btn" id="copy">Copy image</button><span class="msg" id="cmsg"></span></div>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const h = location.hostname, parts = location.pathname.split("/").filter(Boolean);
+  const OWNER = h.endsWith(".github.io") ? h.split(".")[0] : "EliteTuber168";
+  const REPO = h.endsWith(".github.io") ? (parts[0] || h) : "vikings-stats";
+  const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+  let TOKEN = ""; try{ TOKEN = localStorage.getItem("vk_token") || ""; }catch{}
+
+  // hand-written defaults from the original posters (used until a player has a saved default)
+  const CLASSIC = {
+    dart6760:{art:"dart.webp", tag:"TEAM MVP", pills:["83% ON SHORT THROWS","14 PRESSURES VS SAINTS","16 TACKLES"]},
+    plumekod:{art:"plume.webp", tag:"LOCKDOWN", pills:["PICK-SIX","8 OF 9 TARGETS CAUGHT","FORCED FUMBLE"]},
+    ddupont1:{art:"ddupont.webp", tag:"WR1", pills:["TEAM LEADER IN REC YARDS","KICK RETURN TD","7 CATCHES IN TRAFFIC"]},
+    thekingofsoccer2022:{art:"king.webp", tag:"SECOND CHANCE", stamp:"ON PROBATION", pills:["TD ON 2 OF 3 CATCHES","2 INTS VS SAINTS","9.0 YDS / TARGET ALLOWED"]},
+    sequnse:{art:"sequense.webp", tag:"DO-IT-ALL", pills:["130 RATING VS SAINTS","TEAM-HIGH 2 PASS BREAKUPS","FUMBLE RECOVERY"]},
+    crazyandrew612:{art:"crazyandrew.webp", tag:"MONEY LEG", pills:["6.6 YDS / TARGET ALLOWED","6 TACKLES VS SAINTS","5 QB PRESSURES"]},
+    lt_isawesome:{art:"lt.webp", tag:"EDGE", pills:["9 PRESSURES IN ONE GAME","TEAM'S TOP EDGE RUSHER","5 TACKLES"]},
+    stealabrainrot57528:{art:"brainrot.webp", tag:"NEW SIGNING", pills:["13-YARD CARRY","3 CATCHES IN TRAFFIC","2 QB PRESSURES"]},
+  };
+  const TAGS = ["TEAM MVP","CAPTAIN","QB1","WR1","CB1","LOCKDOWN","PLAYMAKER","RETURN MAN","MONEY LEG","EDGE","PASS RUSH","DO-IT-ALL","BALL HAWK","DEEP THREAT","NEW SIGNING","SECOND CHANCE","ROOKIE","IRON MAN"];
+
+  // ---------- stats (same parser as the stat book) ----------
+  const SECS = ["Passing","Rushing","Receiving","Cornerback","DLine","SpecialTeams"];
+  function parseCSV(text){
+    const out = {}; let sec = null, head = null;
+    for (const raw of text.replace(/\r/g,"").split("\n")){
+      const line = raw.trim(); if (!line) continue;
+      const bare = line.replace(/,+$/,"").replace(/^"|"$/g,"");
+      if (SECS.includes(bare)){ sec = bare; head = null; continue; }
+      const cells = line.split(",").map(c => c.replace(/^"|"$/g,"").trim());
+      if (cells[0] === "Username"){ head = cells; continue; }
+      if (!sec || !head || !cells[0]) continue;
+      const row = {}; head.forEach((h,i) => row[h] = cells[i]);
+      const u = cells[0], p = out[u] || (out[u] = {});
+      const N = h => { const v = parseFloat(row[h]); return isFinite(v) ? v : 0; };
+      const add = (k,v) => { if (v) p[k] = (p[k]||0) + v; };
+      if (sec === "Passing"){ add("cmp",N("Completions")); add("att",N("Attempts")); add("pyd",N("Passing Yards")); add("ptd",N("Touchdowns")); add("pint",N("Interceptions")); }
+      else if (sec === "Rushing"){ add("ra",N("Rushing Attempts")); add("ryd",N("Rushing Yards")); add("rtd",N("Touchdowns")); }
+      else if (sec === "Receiving"){ add("rec",N("Receptionss")+N("Receptions")); add("tgt",N("Targets")); add("cyd",N("Receiving Yards")); add("ctd",N("Touchdowns")); add("yac",N("Yards After Catch")); add("trf",N("Catches In Traffic")); }
+      else if (sec === "Cornerback"){ add("tkl",N("Tackles")); add("int",N("Interceptions")); add("itd",N("Interception TDs")); add("pbu",N("Pass Break Ups")); add("ctg",N("Targets")); add("ya",N("Passing Yards Allowed")); add("tda",N("Passing Touchdowns Allowed")); }
+      else if (sec === "DLine"){ add("sck",N("Sacks")); add("qbh",N("Quarterback Hits")); add("prs",N("QB Pressures")); add("ff",N("Fumbles Forced")); add("fr",N("Fumbles Recovered")); }
+      else if (sec === "SpecialTeams"){ const fg = String(row["Field Goals"]||"0/0").split("/"); add("fgm",+fg[0]||0); add("fga",+fg[1]||0); add("kr",N("Kick Returns")); add("kry",N("Kick Return Yards")); add("krtd",N("Kick Return Touchdowns")); add("in10",N("Punts In 10YD Line")); }
+    }
+    return out;
+  }
+  let cfg = {roster:{}, games:{}}, games = [], T = {}, artFiles = [];
+  const lc = s => String(s).toLowerCase();
+  const rosterKey = u => Object.keys(cfg.roster).find(k => lc(k) === lc(u));
+  const vsText = g => /^vs\b/i.test(g.title) ? g.title.toUpperCase() : "IN " + g.title.toUpperCase();
+  const r1 = v => (Math.round(v*10)/10).toString();
+  const STATDEFS = [
+    ["pyd","PASS YARDS"],["ptd","PASS TD"],["rate","PASSER RATING"],["cpct","COMPLETION %"],["cyd","REC YARDS"],["ctd","REC TD"],["rec","CATCHES"],["catch","CATCH %"],["ypr","YDS / CATCH"],["yac","YARDS AFTER CATCH"],
+    ["ryd","RUSH YARDS"],["tds","TOTAL TDS"],["tkl","TACKLES"],["int","INTERCEPTIONS"],["pbu","PASS BREAKUPS"],["ypt","YDS / TARGET ALLOWED"],["prs","QB PRESSURES"],["sck","SACKS"],["kicks","KICKS"],["kry","RETURN YARDS"],["gp","GAMES"]];
+  function build(){
+    T = {};
+    for (const g of games) for (const u of g.vikings){ const s = g.players[u]; const a = T[lc(u)] || (T[lc(u)] = {gp:0, log:[]}); a.gp++; a.log.push(g); for (const k in s) a[k] = (a[k]||0) + s[k]; }
+    for (const a of Object.values(T)){
+      a.cpct = a.att >= 5 ? a.cmp/a.att*100 : null;
+      if (a.att >= 5){ const c = x => Math.max(0, Math.min(2.375, x)); a.rate = (c((a.cmp/a.att-.3)*5)+c(((a.pyd||0)/a.att-3)*.25)+c((a.ptd||0)/a.att*20)+c(2.375-(a.pint||0)/a.att*25))/6*100; }
+      a.catch = a.tgt >= 5 ? a.rec/a.tgt*100 : null; a.ypr = a.rec >= 4 ? a.cyd/a.rec : null; a.ypt = a.ctg >= 5 ? (a.ya||0)/a.ctg : null;
+      a.tds = (a.ctd||0)+(a.rtd||0)+(a.itd||0)+(a.krtd||0); a.kicks = a.fga || null;
+    }
+  }
+  const fmt = (k,a) => k === "cpct" || k === "catch" ? r1(a[k]) + "%" : k === "rate" || k === "ypr" || k === "ypt" ? r1(a[k]) : k === "kicks" ? `${a.fgm||0}/${a.fga}` : String(Math.round(a[k]));
+  function statOptions(u){
+    const a = T[lc(u)]; if (!a) return [];
+    const all = Object.values(T);
+    return STATDEFS.filter(([k]) => a[k] != null && a[k] !== 0).map(([k,label]) => {
+      const vals = all.map(x => x[k]).filter(v => v != null);
+      const best = k === "ypt" ? Math.min(...vals) : Math.max(...vals);
+      const share = k === "ypt" ? best / a[k] : a[k] / (best || 1);
+      const wgt = ["rate","cpct","catch","ypr","ypt","yac","rec","pbu","ryd"].includes(k) ? .8 : 1;
+      return {k, label, value: fmt(k,a), share: k === "gp" ? 0 : share*wgt};
+    });
+  }
+  function pillOptions(u){
+    const a = T[lc(u)]; if (!a) return [];
+    const out = [], opts = statOptions(u);
+    for (const o of opts) if (o.share >= .8 && o.k !== "gp" && T[lc(u)][o.k] === Math.max(...Object.values(T).map(x=>x[o.k]??-1e9))) out.push(`TEAM LEADER IN ${o.label}`);
+    const G = [["pyd","PASS YDS"],["ptd","PASS TD"],["cyd","REC YDS"],["ctd","REC TD"],["tkl","TACKLES"],["int","INTS"],["prs","PRESSURES"],["sck","SACKS"],["kry","RETURN YDS"]];
+    for (const [k,l] of G){ let best = null; for (const g of a.log){ const v = g.players[Object.keys(g.players).find(x=>lc(x)===lc(u))]?.[k]||0; if (v && (!best || v > best.v)) best = {v,g}; } if (best && best.v >= (k==="pyd"||k==="cyd"||k==="kry"?40:k==="tkl"||k==="prs"?4:1)) out.push(`${best.v} ${l} ${vsText(best.g)}`); }
+    for (const o of opts) if (o.k !== "gp") out.push(`${o.value} ${o.label}`);
+    if (a.trf) out.push(`${a.trf} CATCHES IN TRAFFIC`);
+    if (a.ff) out.push(`${a.ff} FORCED FUMBLE${a.ff>1?"S":""}`);
+    if (a.itd) out.push("PICK-SIX");
+    if (a.krtd) out.push("KICK RETURN TD");
+    return [...new Set(out)];
+  }
+  function positions(u){
+    const out = [];
+    for (const [pos, list] of Object.entries(cfg.depth || {})){ const i = (list||[]).findIndex(x => lc(x) === lc(u)); if (i >= 0) out.push(pos + (list.length > 1 ? i+1 : "")); }
+    return out.join(" · ");
+  }
+  function autoPoster(u){
+    const k = rosterKey(u) || u, r = cfg.roster[k] || {}, c = CLASSIC[lc(u)] || {};
+    const RATE = ["rate","cpct","catch","ypr","ypt"];
+    const sorted = statOptions(u).filter(o=>o.k!=="gp").sort((x,y)=>y.share-x.share);
+    const opts = sorted.filter(o=>o.share >= .3).concat(sorted.filter(o=>o.share < .3 && !RATE.includes(o.k))).slice(0,4);
+    while (opts.length < 4) opts.push({k:"", value:"", label:""});
+    const a = T[lc(u)];
+    return {nick:(r.name||u).toUpperCase(), num:String(r.number ?? ""), pos:positions(u), tag:c.tag || "",
+      stats:opts.map(o=>({k:o.k, v:o.value, l:o.label})), pills:(c.pills || pillOptions(u).slice(0,3)).slice(0,3).concat(["","",""]).slice(0,3),
+      stamp:c.stamp || "", foot: a ? `${a.gp} GAME${a.gp===1?"":"S"} LOGGED` : "", art: c.art || ""};
+  }
+
+  // ---------- form ----------
+  let cur = null, P = null;
+  function fillForm(){
+    $("#nick").value = P.nick; $("#num").value = P.num; $("#pos").value = P.pos; $("#tag").value = P.tag; $("#stamp").value = P.stamp; $("#foot").value = P.foot;
+    const so = statOptions(cur);
+    $("#stats").innerHTML = P.stats.map((s,i)=>`<div class="slot" data-i="${i}"><select data-f="k" aria-label="Stat ${i+1}"><option value="">Custom</option>${so.map(o=>`<option value="${o.k}" ${o.k===s.k?"selected":""}>${esc(o.label)} (${esc(o.value)})</option>`).join("")}</select><input data-f="v" value="${esc(s.v)}" aria-label="Value"><input data-f="l" value="${esc(s.l)}" aria-label="Label"></div>`).join("");
+    const po = pillOptions(cur);
+    $("#pills").innerHTML = P.pills.map((p,i)=>`<div class="pslot" data-i="${i}"><select data-f="pick" aria-label="Suggestion ${i+1}"><option value="">Suggestions…</option>${po.map(o=>`<option>${esc(o)}</option>`).join("")}</select><input data-f="t" value="${esc(p)}" aria-label="Highlight ${i+1}"></div>`).join("");
+    $("#art").innerHTML = `<option value="">No art (plain)</option>` + artFiles.map(f=>`<option ${f===P.art?"selected":""}>${esc(f)}</option>`).join("") + (P.art && !artFiles.includes(P.art) ? `<option selected value="${esc(P.art)}">${esc(P.art)} (not uploaded yet)</option>` : "");
+    $("#artnote").textContent = !artFiles.length ? "No art uploaded yet — click Upload art and pick the images from your UFStats › vikings-stat-book › posters › art folder." : "";
+    draw();
+  }
+  function readForm(){
+    P.nick = $("#nick").value; P.num = $("#num").value; P.pos = $("#pos").value; P.tag = $("#tag").value; P.stamp = $("#stamp").value; P.foot = $("#foot").value; P.art = $("#art").value;
+    document.querySelectorAll("#stats .slot").forEach(el => { const s = P.stats[+el.dataset.i]; s.k = el.querySelector("[data-f=k]").value; s.v = el.querySelector("[data-f=v]").value; s.l = el.querySelector("[data-f=l]").value; });
+    document.querySelectorAll("#pills .pslot").forEach(el => { P.pills[+el.dataset.i] = el.querySelector("[data-f=t]").value; });
+  }
+  document.addEventListener("input", e => { if (e.target.closest(".panel") && e.target.id !== "player" && e.target.dataset.f !== "pick" && e.target.dataset.f !== "k"){ readForm(); draw(); } });
+  document.addEventListener("change", e => {
+    const t = e.target;
+    if (t.id === "player"){ load(t.value); return; }
+    if (t.dataset.f === "k"){ const o = statOptions(cur).find(o=>o.k===t.value), el = t.closest(".slot"); if (o){ el.querySelector("[data-f=v]").value = o.value; el.querySelector("[data-f=l]").value = o.label; } readForm(); draw(); }
+    if (t.dataset.f === "pick" && t.value){ t.closest(".pslot").querySelector("[data-f=t]").value = t.value; t.value = ""; readForm(); draw(); }
+    if (t.id === "art"){ readForm(); loadArt(); }
+  });
+  function load(u){ cur = u; $("#player").value = u; const saved = (cfg.posters||{})[rosterKey(u)||u]; P = saved ? JSON.parse(JSON.stringify(saved)) : autoPoster(u); P.foot ||= autoPoster(u).foot; fillForm(); loadArt(); }
+  $("#auto").onclick = () => { P = autoPoster(cur); fillForm(); loadArt(); };
+
+  // ---------- drawing ----------
+  const cv = $("#cv"), ctx = cv.getContext("2d"); let img = null, imgFor = "";
+  function loadArt(){
+    const f = P.art; if (!f){ img = null; draw(); return; }
+    if (f === imgFor && img){ draw(); return; }
+    const im = new Image(); im.onload = () => { img = im; imgFor = f; draw(); }; im.onerror = () => { img = null; imgFor = ""; draw(); };
+    im.src = "posters/art/" + encodeURIComponent(f) + "?v=" + (window.__artv||0);
+  }
+  function spaced(text, x, y, size, font, ls, color, align="center"){
+    ctx.font = `${font.w||""} ${size}px ${font.f}`.trim(); ctx.fillStyle = color;
+    ctx.letterSpacing = (ls*size) + "px";
+    const w = ctx.measureText(text).width - ls*size;
+    const sx = align === "center" ? x - w/2 : x;
+    ctx.textAlign = "left"; ctx.fillText(text, sx, y); ctx.letterSpacing = "0px";
+    return w;
+  }
+  function wrap(text, maxW){
+    const words = String(text).split(/\s+/).filter(Boolean), lines = []; let line = "";
+    for (const w of words){ const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+    if (line) lines.push(line); return lines;
+  }
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
+  const RJ = {f:'Rajdhani, sans-serif', w:700}, BB = {f:'"Bebas Neue", Impact, sans-serif'}, PM = {f:'"Permanent Marker", cursive'};
+  function icon(i, cx, cy){
+    ctx.save(); ctx.translate(cx-18, cy); ctx.scale(36/40, 36/40); ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+    if (i === 0) ctx.stroke(new Path2D("M20 3l4.6 10.6 11.4.9-8.7 7.5 2.7 11.2L20 27.3 10 33.2l2.7-11.2L4 14.5l11.4-.9z"));
+    else if (i === 1){ ctx.beginPath(); ctx.ellipse(20,20,16,9,-35*Math.PI/180,0,Math.PI*2); ctx.stroke(); ctx.stroke(new Path2D("M14 26L26 14M17 19l4 4M20 16l4 4M14 22l4 4")); }
+    else ctx.stroke(new Path2D("M12 6h16v6a8 8 0 0 1-16 0zM12 9H6a6 6 0 0 0 6 6M28 9h6a6 6 0 0 1-6 6M20 20v8M13 34h14M16 28h8v6h-8z"));
+    ctx.restore();
+  }
+  function draw(){
+    if (!P) return;
+    const W = 1024, H = 1536; ctx.clearRect(0,0,W,H); ctx.textBaseline = "alphabetic";
+    // background
+    if (img){ const s = Math.max(W/img.width, H/img.height), iw = img.width*s, ih = img.height*s; ctx.drawImage(img, (W-iw)/2, (H-ih)/2, iw, ih); }
+    else { const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#2a1255"); g.addColorStop(1,"#07030e"); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+      ctx.save(); ctx.globalAlpha = .12; ctx.font = `700px ${BB.f}`; ctx.textAlign = "center"; ctx.fillStyle = "#9b5cff"; ctx.fillText(P.num || "V", W/2, 1000); ctx.restore(); }
+    let g = ctx.createLinearGradient(0,0,0,330); g.addColorStop(0,"rgba(7,3,14,.85)"); g.addColorStop(1,"rgba(7,3,14,0)"); ctx.fillStyle = g; ctx.fillRect(0,0,W,330);
+    g = ctx.createLinearGradient(0,H-470,0,H); g.addColorStop(0,"rgba(7,3,14,0)"); g.addColorStop(.32,"rgba(7,3,14,.88)"); g.addColorStop(.6,"#07030e"); g.addColorStop(1,"#07030e"); ctx.fillStyle = g; ctx.fillRect(0,H-470,W,470);
+    // top line
+    if (P.pos){ const w = spaced(P.pos, W/2, 34+22, 22, RJ, .42, "#e9e1f7"); ctx.fillStyle = "#8d7bb0"; ctx.fillRect(W/2-w/2-26-120, 48, 120, 1); ctx.fillRect(W/2+w/2+26, 48, 120, 1); }
+    // big name
+    const nick = P.nick || ""; let s = 220; ctx.font = `${s}px ${PM.f}`; while (ctx.measureText(nick).width > 930 && s > 60){ s -= 4; ctx.font = `${s}px ${PM.f}`; }
+    const ny = 70 + (220-s)*.45;
+    ctx.save(); ctx.translate(W/2, ny + s*.55); ctx.rotate(-4*Math.PI/180); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 16; ctx.fillStyle = "#2a0f5c"; ctx.fillText(nick, 0, 10);
+    ctx.shadowColor = "transparent"; ctx.fillStyle = "#7a3cf0"; ctx.fillText(nick, 0, 5);
+    ctx.shadowColor = "rgba(140,80,255,.55)"; ctx.shadowBlur = 50; ctx.shadowOffsetY = 0; ctx.fillStyle = "#fff"; ctx.fillText(nick, 0, 0);
+    ctx.restore();
+    // stamp
+    if (P.stamp){ ctx.save(); ctx.font = `54px ${BB.f}`; ctx.letterSpacing = "4px"; const tw = ctx.measureText(P.stamp).width; const bw = tw + 36, bh = 64;
+      ctx.translate(W - 50 - bw/2, 320 + bh/2); ctx.rotate(12*Math.PI/180);
+      ctx.fillStyle = "rgba(10,4,20,.35)"; ctx.fillRect(-bw/2,-bh/2,bw,bh); ctx.strokeStyle = "rgba(220,40,50,.9)"; ctx.lineWidth = 6; ctx.strokeRect(-bw/2,-bh/2,bw,bh);
+      ctx.strokeStyle = "rgba(220,40,50,.35)"; ctx.lineWidth = 3; ctx.strokeRect(-bw/2+4.5,-bh/2+4.5,bw-9,bh-9);
+      ctx.fillStyle = "rgba(230,50,60,.95)"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(P.stamp, 2, 4); ctx.restore(); }
+    // sub line: @user  #num  TAG
+    const u = rosterKey(cur) || cur, sub = [["@"+u,"#e8e2f3"],[P.num ? "#"+P.num : "","#ffc62f"],[P.tag,"#e8e2f3"]].filter(p=>p[0]);
+    ctx.font = `700 26px ${RJ.f}`; ctx.letterSpacing = (.3*26)+"px"; const gap = 26;
+    const ws = sub.map(p=>ctx.measureText(p[0]).width); let x = W/2 - (ws.reduce((a,b)=>a+b,0) + gap*(sub.length-1))/2;
+    sub.forEach((p,i)=>{ ctx.fillStyle = p[1]; ctx.textAlign = "left"; ctx.fillText(p[0], x, 1128+26); x += ws[i] + gap; }); ctx.letterSpacing = "0px";
+    // stat boxes
+    const st = P.stats.filter(s=>s.v||s.l), n = st.length;
+    if (n){ const L = 56, R = 968, gp = 14, bw = (R-L-gp*(n-1))/n, top = 1180, bh = 134;
+      st.forEach((sv,i)=>{ const bx = L + i*(bw+gp);
+        const gg = ctx.createLinearGradient(0,top,0,top+bh); gg.addColorStop(0,"rgba(120,70,210,.35)"); gg.addColorStop(1,"rgba(40,18,80,.7)");
+        rr(bx,top,bw,bh,10); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = "rgba(190,160,255,.35)"; ctx.lineWidth = 1; ctx.stroke();
+        ctx.save(); rr(bx,top,bw,bh,10); ctx.clip(); ctx.fillStyle = "#ffc62f"; ctx.fillRect(bx,top,bw,3); ctx.restore();
+        let vs = 66; ctx.font = `${vs}px ${BB.f}`; while (ctx.measureText(sv.v).width > bw-16 && vs > 30){ vs -= 2; ctx.font = `${vs}px ${BB.f}`; }
+        ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(sv.v, bx+bw/2, top+14+58);
+        ctx.font = `700 16px ${RJ.f}`; ctx.letterSpacing = (.14*16)+"px"; const lines = wrap(String(sv.l).toUpperCase(), bw-16).slice(0,2);
+        ctx.fillStyle = "#cbbde6"; lines.forEach((ln,j)=>ctx.fillText(ln, bx+bw/2+1, top+14+66+6+14+j*18.5)); ctx.letterSpacing = "0px";
+      }); }
+    // highlights
+    const pl = P.pills.filter(Boolean), m = pl.length;
+    if (m){ const L = 40, R = 984, cw = (R-L)/m, top = 1336;
+      pl.forEach((t,i)=>{ const cx = L + cw*i + cw/2; if (i){ ctx.fillStyle = "rgba(200,180,240,.28)"; ctx.fillRect(L+cw*i, top, 1, 110); }
+        icon(i%3, cx, top); ctx.font = `700 18px ${RJ.f}`; ctx.letterSpacing = (.18*18)+"px"; ctx.fillStyle = "#eee8f7"; ctx.textAlign = "center";
+        wrap(String(t).toUpperCase(), cw-32).slice(0,3).forEach((ln,j)=>ctx.fillText(ln, cx+1.6, top+36+8+18+j*24.3)); ctx.letterSpacing = "0px"; }); }
+    // footer
+    if (P.foot){ const w = spaced(P.foot.toUpperCase(), W/2, H-24-4, 18, RJ, .5, "#a898c4"); ctx.fillStyle = "#6f5f8f"; ctx.fillRect(W/2-w/2-24-120, H-38, 120, 1); ctx.fillRect(W/2+w/2+24, H-38, 120, 1); }
+  }
+
+  // ---------- export ----------
+  const cmsg = (t, ok=true) => { const m = $("#cmsg"); m.textContent = t; m.className = "msg " + (ok?"ok":"err"); clearTimeout(cmsg.t); cmsg.t = setTimeout(()=>m.textContent="", 4000); };
+  const blob = () => new Promise(r => cv.toBlob(r, "image/png"));
+  $("#dl").onclick = async () => { const b = await blob(); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${(P.nick||"poster").toLowerCase().replace(/[^a-z0-9]+/g,"-")}-poster.png`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 5000); };
+  $("#copy").onclick = async () => { try{ await navigator.clipboard.write([new ClipboardItem({"image/png": blob()})]); cmsg("Copied — paste it anywhere."); }catch{ cmsg("Your browser blocked copying. Use Download instead.", false); } };
+
+  // ---------- GitHub (save + art upload) ----------
+  const b64 = buf => { const b = new Uint8Array(buf); let s = ""; for (let i=0;i<b.length;i+=0x8000) s += String.fromCharCode(...b.subarray(i,i+0x8000)); return btoa(s); };
+  async function gh(p, opts={}){
+    const r = await fetch(API + p.split("/").map(encodeURIComponent).join("/") + (opts.method ? "" : `?t=${Date.now()}`), {...opts, cache:"no-store", headers:{...(TOKEN?{Authorization:`Bearer ${TOKEN}`}:{}), Accept:"application/vnd.github+json", ...(opts.body?{"Content-Type":"application/json"}:{})}});
+    if (!r.ok){ let m = r.status; try{ m = (await r.json()).message || m; }catch{} const e = new Error(m); e.status = r.status; throw e; }
+    return r.json();
+  }
+  const smsg = (t, ok=true) => { const m = $("#smsg"); m.textContent = t; m.className = "msg " + (ok?"ok":"err"); };
+  $("#save").onclick = async () => {
+    if (!TOKEN) return smsg("Sign in on the admin page first.", false);
+    readForm(); $("#save").disabled = true; smsg("Saving…");
+    try{
+      const f = await gh("config.json"); const c = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(f.content.replace(/\n/g,"")), ch => ch.charCodeAt(0))));
+      c.posters ||= {}; c.posters[rosterKey(cur) || cur] = P;
+      await gh("config.json", {method:"PUT", body:JSON.stringify({message:`Save poster for ${P.nick}`, content:b64(new TextEncoder().encode(JSON.stringify(c,null,2)+"\n")), sha:f.sha})});
+      cfg.posters = c.posters; smsg("Saved. This is now the default for this player.");
+    }catch(e){ smsg("Couldn't save: " + e.message, false); }
+    $("#save").disabled = false;
+  };
+  $("#artfile").onchange = async e => {
+    const files = [...e.target.files]; e.target.value = ""; if (!files.length) return;
+    if (!TOKEN){ // no sign-in: preview locally only
+      const im = new Image(); im.onload = () => { img = im; imgFor = "__local"; draw(); }; im.src = URL.createObjectURL(files[0]);
+      $("#artnote").textContent = "Showing your image in the preview only. Sign in on the admin page to save art to the site."; return;
+    }
+    $("#artnote").textContent = `Uploading ${files.length} image${files.length>1?"s":""}…`;
+    try{
+      for (const f of files){
+        const name = f.name.toLowerCase().replace(/[^a-z0-9._-]+/g,"-");
+        let sha; try{ sha = (await gh("posters/art/" + name)).sha; }catch{}
+        await gh("posters/art/" + name, {method:"PUT", body:JSON.stringify({message:`Add poster art ${name}`, content:b64(await f.arrayBuffer()), ...(sha?{sha}:{})})});
+        if (!artFiles.includes(name)) artFiles.push(name);
+      }
+      artFiles.sort(); window.__artv = Date.now();
+      $("#artnote").textContent = "Uploaded. New art can take a minute or two to show up.";
+      P.art = P.art || (CLASSIC[lc(cur)]?.art ?? ""); fillForm();
+      setTimeout(loadArt, 60000); setTimeout(loadArt, 120000);
+    }catch(err){ $("#artnote").textContent = "Couldn't upload: " + err.message; }
+  };
+
+  // ---------- boot ----------
+  function meta(file){ const base = file.replace(/\.csv$/i,""); const m = base.match(/^(\d{4}-\d{2}-\d{2})\s*(.*)$/); return m ? {date:m[1], title:m[2]||"Game"} : {date:"", title:base}; }
+  (async () => {
+    try{
+      cfg = await (await fetch("config.json", {cache:"no-store"})).json(); cfg.roster ||= {}; cfg.games ||= {};
+      let files = [];
+      try{ files = (await (await fetch(API + "games", {cache:"no-store"})).json()).filter(f=>/\.csv$/i.test(f.name)).map(f=>f.name); }catch{ files = Object.keys(cfg.games); }
+      try{ artFiles = (await (await fetch(API + "posters/art", {cache:"no-store"})).json()).filter(f=>/\.(png|jpe?g|webp|gif)$/i.test(f.name)).map(f=>f.name).sort(); }catch{ artFiles = []; }
+      if (!Array.isArray(artFiles)) artFiles = [];
+      const all = await Promise.all(files.sort().map(async f => {
+        const r = await fetch("games/" + encodeURIComponent(f), {cache:"no-store"}); if (!r.ok) return null;
+        const players = parseCSV(await r.text()), o = cfg.games[f] || {}, not = new Set(o.notVikings||[]);
+        return {...meta(f), ...(o.title?{title:o.title}:{}), players, vikings: Object.keys(players).filter(u => (rosterKey(u) && !not.has(u)) || (o.alsoVikings||[]).includes(u))};
+      }));
+      games = all.filter(Boolean); build();
+      const users = Object.keys(cfg.roster);
+      $("#player").innerHTML = users.map(u=>`<option value="${esc(u)}">#${esc(cfg.roster[u].number ?? "")} ${esc(cfg.roster[u].name)}</option>`).join("");
+      await Promise.all([document.fonts.load(`220px "Permanent Marker"`), document.fonts.load(`66px "Bebas Neue"`), document.fonts.load(`700 20px Rajdhani`)]).catch(()=>{});
+      const q = new URLSearchParams(location.search).get("p"); load(users.find(u=>lc(u)===lc(q||"")) || users[0]);
+    }catch(e){ $("#artnote").textContent = "Couldn't load the roster. Refresh to try again."; }
+  })();
+})();
+</script>
+</body></html>

@@ -96,6 +96,7 @@ tbody tr:hover{background:rgba(155,92,255,.08)}
 .res.W{color:var(--good)} .res.L{color:var(--bad)} .res.T{color:var(--mute)}
 .pog{display:flex;align-items:center;gap:10px;border:1px solid var(--gold);background:rgba(255,198,47,.06);border-radius:10px;padding:8px 10px}
 .pog .lbl{font-size:11px;letter-spacing:.2em;font-weight:700;color:var(--gold)}
+.gnote{border-left:3px solid var(--accent);padding:6px 10px;font-size:15px;font-style:italic;background:rgba(155,92,255,.08);border-radius:0 8px 8px 0}
 .perf{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
 .perf div{font-size:14px;color:var(--mute)} .perf b{color:var(--fg)}
 details summary{cursor:pointer;font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
@@ -410,6 +411,7 @@ footer a{color:var(--mute)}
     const lead = (k, lbl) => { const u = g.vikings.filter(u=>g.players[u]?.[k]).sort((a,b)=>g.players[b][k]-g.players[a][k])[0]; return u ? `<div>${lbl}: <b>${esc(nm(u))}</b> — ${esc(statline({[k]:1, ...pick(g.players[u], k)}))}</div>` : ""; };
     return `<div class="game"><div class="ghead"><div><div class="gtitle">${esc(g.title)}</div><div class="gmeta">${esc(g.date)} · ${g.vikings.length} Vikings</div></div>
       ${s ? `<div class="res ${s.r}">${s.r} ${s.us}–${s.them}</div>` : `<div class="muted" style="font-size:13px">No score entered</div>`}</div>
+      ${g.note ? `<div class="gnote">${esc(g.note)}</div>` : ""}
       ${g.pog ? `<a class="pog" href="#/player/${encodeURIComponent(g.pog)}" style="text-decoration:none">${numDot(g.pog)}<div><div class="lbl">PLAYER OF THE GAME</div><b>${esc(nm(g.pog))}</b> <span class="muted">— ${esc(statline(g.players[g.pog]))}</span></div></a>` : ""}
       <div class="perf">${lead("pyd","Passing")}${lead("cyd","Receiving")}${lead("ryd","Rushing")}${lead("int","Picks")}${lead("tkl","Tackles")}${lead("prs","Pass rush")}</div>
       ${full ? `<details><summary>Box score</summary><div class="tscroll"><table><thead><tr><th>Player</th><th>Impact</th><th style="text-align:left">Stat line</th></tr></thead><tbody>${g.vikings.slice().sort((a,b)=>(g.imp[b]||0)-(g.imp[a]||0)).map(u=>`<tr><td>${plink(u, `<span class="n">${esc(jn(u))}</span>${esc(nm(u))}`)}</td><td>${f1(g.imp[u])}</td><td style="text-align:left;white-space:normal">${esc(statline(g.players[u]))}</td></tr>`).join("")}</tbody></table></div></details>` : ""}
@@ -493,7 +495,7 @@ footer a{color:var(--mute)}
         const r = await fetch("games/" + encodeURIComponent(f), {cache:"no-store"}); if (!r.ok) return null;
         const players = parseCSV(await r.text()), o = (cfg.games||{})[f] || {}, not = new Set(o.notVikings||[]);
         const vikings = Object.keys(players).filter(u => (R(u) && !not.has(u)) || (o.alsoVikings||[]).includes(u));
-        return {file:f, ...meta(f), ...(o.title?{title:o.title}:{}), score:o.score, players, vikings};
+        return {file:f, ...meta(f), ...(o.title?{title:o.title}:{}), score:o.score, note:o.note, players, vikings};
       }));
       games = all.filter(Boolean); loaded = true; build(); render();
     }catch(e){ loaded = true; $("#sub").textContent = "Couldn't load the stats. Refresh the page to try again."; }
